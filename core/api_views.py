@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from . import pwa_views as pv
-from .models import Activity
+from .models import Activity, Department, SubCounty
 
 SALT = "sdlg-promis-api"
 MAX_AGE = 60 * 60 * 24 * 30  # a token lasts 30 days
@@ -30,16 +30,18 @@ def is_supervisor(user):
 
 
 def _user(u):
-    dept = getattr(u, "department", None)
-    sub = getattr(u, "sub_county", None)
+    dept = pv.user_obj(u, "department", Department)
+    sub = pv.user_obj(u, "sub_county", SubCounty)
     return {
         "id": u.pk,
         "username": u.get_username(),
         "name": u.get_full_name() or u.get_username(),
         "role": getattr(u, "role", ""),
         "is_supervisor": is_supervisor(u),
-        "department": {"id": dept.pk, "name": str(dept)} if dept else None,
-        "sub_county": {"id": sub.pk, "name": str(sub)} if sub else None,
+        "department": {"id": dept.pk, "name": str(dept)} if dept else (
+            {"id": None, "name": str(getattr(u, "department", ""))} if getattr(u, "department", "") else None),
+        "sub_county": {"id": sub.pk, "name": str(sub)} if sub else (
+            {"id": None, "name": str(getattr(u, "sub_county", ""))} if getattr(u, "sub_county", "") else None),
     }
 
 
@@ -209,7 +211,7 @@ def _pending_qs(user):
         return Activity.objects.none()
     qs = Activity.objects.filter(**{s: "submitted"})
     if not (user.is_superuser or getattr(user, "role", "") in ("admin", "dpo")):
-        dept = getattr(user, "department", None)
+        dept = pv.user_obj(user, "department", Department)
         if dept and pv.pick(Activity, "department"):
             qs = qs.filter(department=dept)
     of = _officer_field()
