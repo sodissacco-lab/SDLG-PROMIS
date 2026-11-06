@@ -1,4 +1,4 @@
-import importlib.util
+import importlib
 
 from django.contrib import admin
 from django.urls import include, path
@@ -9,9 +9,12 @@ urlpatterns = [
     path("manage/", include("core.admin_urls")),
 ]
 
-# Optional page groups: only added when their file is present.
+# Optional page groups: added only if they load without errors.
 for _module in ("core.pwa_urls", "core.permit_urls", "core.api_urls"):
-    if importlib.util.find_spec(_module):
-        urlpatterns.append(path("", include(_module)))
+    try:
+        importlib.import_module(_module)
+    except Exception:
+        continue
+    urlpatterns.append(path("", include(_module)))
 
 urlpatterns.append(path("", include("core.urls")))
