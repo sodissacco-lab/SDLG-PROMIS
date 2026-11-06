@@ -129,18 +129,15 @@ def offline_app(request):
     return render(request, "core/offline_app.html")
 
 
-@login_required
-@never_cache
-def offline_data(request):
-    """Everything the phone needs to fill the form with no signal."""
-    u = request.user
+def lookup_data(u):
+    """Lists the phone needs to fill the form with no signal."""
     depts = list(Department.objects.order_by("name").values("id", "name"))
     subs = list(SubCounty.objects.order_by("name").values("id", "name"))
     parishes = list(Parish.objects.order_by("name").values("id", "name", "sub_county_id"))
     types = {name: list(items) for name, items in BY_DEPARTMENT.items()}
     my_dept = getattr(getattr(u, "department", None), "id", None)
     my_sub = getattr(getattr(u, "sub_county", None), "id", None)
-    return JsonResponse({
+    return {
         "user": u.get_full_name() or u.get_username(),
         "my_department": my_dept,
         "my_sub_county": my_sub,
@@ -148,7 +145,14 @@ def offline_data(request):
         "sub_counties": subs,
         "parishes": parishes,
         "activity_types": types,
-    })
+    }
+
+
+@login_required
+@never_cache
+def offline_data(request):
+    """Everything the phone needs to fill the form with no signal."""
+    return JsonResponse(lookup_data(request.user))
 
 
 # ------------------------------------------------------------------ sync
@@ -159,9 +163,8 @@ def _int(value):
         return 0
 
 
-@login_required
-@require_POST
-def offline_sync(request):
+def sync_record(request):
+    """Saves one phone-made record. The caller must have set request.user."""
     try:
         data = json.loads(request.POST.get("payload", ""))
     except ValueError:
@@ -263,3 +266,6 @@ def offline_sync(request):
                     saved_photos += 1
 
     return JsonResponse({"ok": True, "id": activity.pk, "photos": saved_photos, "stored": sorted(set(stored))})
+
+
+offline_sync = login_required(require_POST(sync_record))
