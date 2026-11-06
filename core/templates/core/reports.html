@@ -1,0 +1,58 @@
+{% extends "core/base.html" %}
+{% block content %}
+<style>
+  select{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;box-sizing:border-box;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a}
+  .filters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  form label{font-size:13px;color:#4a5a4a;display:block}
+</style>
+
+<h2 style="margin-top:0">Monthly report</h2>
+<form method="get" class="card">
+  <div class="filters">
+    <div><label>Month</label>
+      <select name="month">
+        {% for num, name in months %}<option value="{{ num }}" {% if num == month %}selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select></div>
+    <div><label>Year</label><input type="number" name="year" value="{{ year }}"></div>
+    <div><label>Department</label>
+      <select name="department">
+        <option value="">All departments</option>
+        {% for d in departments %}<option value="{{ d.pk }}" {% if d.pk == department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select></div>
+    <div><label>Sub-county</label>
+      <select name="sub_county">
+        <option value="">All sub-counties</option>
+        {% for s in sub_counties %}<option value="{{ s.pk }}" {% if s.pk == sub_county_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></div>
+  </div>
+  <button class="btn" type="submit">Show report</button>
+</form>
+
+<p><b>{{ data.period }}</b>{% if data.filters %} · {{ data.filters }}{% endif %}<br>
+<small>Only approved activities are counted.</small></p>
+
+<div class="dl">
+  <a class="btn" href="{% url 'report_pdf' %}?{{ query }}">Download PDF</a>
+  <a class="btn alt" href="{% url 'report_docx' %}?{{ query }}">Download Word</a>
+</div>
+
+{% for t in tables %}
+<h2>{{ t.title }}</h2>
+<div class="card" style="overflow-x:auto">
+  {% if t.rows %}
+  <table>
+    <tr>{% for h in t.header %}<th>{{ h }}</th>{% endfor %}</tr>
+    {% for row in t.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+  </table>
+  {% else %}
+  <p>No records.</p>
+  {% endif %}
+</div>
+{% endfor %}
+<p><a href="{% url 'dashboard' %}">Back to dashboard</a></p>
+{% endblock %}

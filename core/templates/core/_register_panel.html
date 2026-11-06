@@ -1,0 +1,34 @@
+{% if rows %}
+<div class="panel" style="margin-bottom:12px">
+  <h2>{{ title }}</h2>
+  <div class="tbl">
+    <table>
+      <tr><th>Register</th><th>Registered</th><th>New this month</th><th>Active</th></tr>
+      {% for r in rows %}
+      <tr>
+        <td><a href="{{ r.url }}">{{ r.label }}</a></td>
+        <td>{{ r.total }}</td>
+        <td>{{ r.new }}</td>
+        <td>{% if r.active is not None %}{{ r.active }}{% else %}-{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% if measures %}
+  <h2>Measured results and licences</h2>
+  <div class="tiles">
+    {% for t in measures %}
+    <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if stale %}
+  <h2>Landing sites not inspected in the last 30 days</h2>
+  <div class="card" style="max-width:none">
+    {% for s in stale %}
+    <div class="row"><a href="{{ s.url }}">{{ s.name }}</a><span>{% if s.last %}last inspected {{ s.last|date:"d M Y" }}{% else %}never inspected{% endif %}</span></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}

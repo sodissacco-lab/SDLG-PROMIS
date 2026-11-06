@@ -1,0 +1,20 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  .n{background:#fff;border:1px solid #dde5dd;border-left:5px solid #1e6fd9;border-radius:8px;padding:10px 12px;margin:0 0 8px;font-size:14px;max-width:900px}
+  .n.urgent{border-left-color:#d93025;background:#fdf1f2}
+  .n.warning{border-left-color:#f08a12;background:#fff8ec}
+  .n a{color:inherit;text-decoration:none}
+  .n a:hover{text-decoration:underline}
+</style>
+<h2 style="margin-top:0">Notifications</h2>
+<p>{{ total }} item{{ total|pluralize }} need attention. The list is rebuilt each time you open this page, and shows only what you are allowed to see.</p>
+{% for group, items in groups %}
+<h2>{{ group }}</h2>
+{% for i in items %}
+<div class="n {{ i.level }}">{% if i.url %}<a href="{{ i.url }}">{{ i.text }}</a>{% else %}{{ i.text }}{% endif %}</div>
+{% endfor %}
+{% empty %}
+<div class="card">Nothing needs your attention right now.</div>
+{% endfor %}
+{% endblock %}

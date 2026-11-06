@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+{% block content %}
+<p>Hello, {{ user.get_full_name|default:user.username }}</p>
+<p>
+  <a class="btn" href="{% url 'activity_new' %}">+ New activity</a>
+  <a class="btn" href="{% url 'activity_list' %}" style="margin-left:8px">My activities</a>
+  <a class="btn" href="{% url 'report' %}" style="margin-left:8px">Reports</a>
+</p>
+{% if is_reviewer %}
+<p><a class="btn" href="{% url 'review_queue' %}">Awaiting review ({{ pending_count }})</a></p>
+{% endif %}
+{% if user.is_superuser or user.role == 'admin' or user.role == 'dpo' or user.role == 'head' or user.role == 'viewer' %}
+<p><a class="btn" href="{% url 'district' %}">District dashboard</a></p>
+{% endif %}
+
+<h2>{{ month_name }}</h2>
+<div class="grid">
+  <div class="card"><span>Activities</span><b>{{ activity_count }}</b></div>
+  <div class="card"><span>People reached</span><b>{{ reached }}</b></div>
+</div>
+
+<h2>By department</h2>
+<div class="card">
+  {% for d in by_department %}
+  <div class="row"><span>{{ d.department__name }}</span><b>{{ d.n }}</b></div>
+  {% empty %}
+  <p>No activities recorded this month.</p>
+  {% endfor %}
+</div>
+
+<h2>Recent activities</h2>
+<div class="card">
+  {% for a in recent %}
+  <div class="row"><span>{{ a.date|date:"d M" }} · {{ a.activity_type }}</span><span>{{ a.department }}</span></div>
+  {% empty %}
+  <p>Nothing yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

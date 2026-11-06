@@ -1,0 +1,51 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  select{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a;background:#f5f8f5}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+  .filterbox{max-width:700px}
+  .filterbox label{font-size:13px;color:#4a5a4a;display:block}
+  .track{background:#e6ece6;border-radius:4px;height:8px;margin-top:4px}
+  .fill{background:#2e9b4f;border-radius:4px;height:8px}
+  .badge{font-size:12px;padding:2px 10px;border-radius:10px;white-space:nowrap}
+  .Ahead{background:#d4edda}.Ontrack{background:#d6e8fb}.Behind{background:#f8d7da}
+  .future{color:#9aa6b5}
+  small{color:#5a6b5a}
+</style>
+<h2 style="margin-top:0">Work Plans &amp; Targets: FY {{ fy_label }}</h2>
+<form method="get" class="card filterbox">
+  <div class="filters">
+    <div><label>Financial year (starting July)</label><input type="number" name="fy" value="{{ fy }}"></div>
+    <div><label>Sector or department</label>
+      <select name="department"><option value="">All</option>
+        {% for d in departments %}<option value="{{ d.pk }}" {% if d.pk == department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select></div>
+  </div>
+  <button class="btn" type="submit">Show</button>
+  {% if can_manage %}<a class="btn" style="margin-left:8px;background:#fff;color:#1f5c3a;border:1px solid #1f5c3a" href="{% url 'admin:core_target_changelist' %}">Manage targets</a>{% endif %}
+</form>
+<p><small>Achievements count approved activities only. The status compares what is done with what should be done by today: the targets of finished quarters plus the part of the current quarter that has passed. Ahead is 100% or more, On track is 80% or more, Behind is below 80%.</small></p>
+<div class="card" style="overflow-x:auto;max-width:none">
+  <table>
+    <tr><th>Indicator</th>{% for n in quarter_names %}<th>{{ n }}</th>{% endfor %}<th>Year</th><th>Status</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td><b>{{ r.label }}</b><br><small>{{ r.unit }}</small></td>
+      {% for q in r.quarters %}
+      <td class="{% if q.future %}future{% endif %}">{{ q.done }} / {{ q.target }}{% if q.pct is not None %}<br><small>{{ q.pct }}%</small>{% endif %}</td>
+      {% endfor %}
+      <td>{{ r.done }} / {{ r.annual }}{% if r.pct is not None %}<br><small>{{ r.pct }}%</small>{% endif %}
+        <div class="track"><div class="fill" style="width:{{ r.bar }}%"></div></div></td>
+      <td><span class="badge {{ r.status|cut:' ' }}">{{ r.status }}</span></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7">No targets are set for this financial year. {% if can_manage %}Use Manage targets to add them.{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+</div>
+{% endblock %}

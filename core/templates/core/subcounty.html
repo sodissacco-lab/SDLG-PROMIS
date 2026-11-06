@@ -1,0 +1,134 @@
+{% extends "core/district.html" %}
+{% block content %}
+<style>
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+  .thumbs img{width:100%;border-radius:8px;display:block}
+  .muted{color:#9aa6b5}
+</style>
+<h1>{{ sc.name }} sub-county dashboard</h1>
+<p class="sub">Statistics and performance for the sub-county (approved activities)</p>
+<div class="nav">
+  <a href="?{{ prev_query }}">&larr; Previous</a>
+  <b>{{ period }}</b>
+  <a href="?{{ next_query }}">Next &rarr;</a>
+</div>
+
+<div class="tiles">
+  {% for t in key_tiles %}
+  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  {% endfor %}
+</div>
+<h2>Activities by sector and department</h2>
+<div class="tiles">
+  {% for t in sector_tiles %}
+  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  {% endfor %}
+</div>
+<h2>Who was reached</h2>
+<div class="tiles">
+  {% for t in people_tiles %}
+  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{{ t.sub }}</small></div>
+  {% endfor %}
+</div>
+
+<div class="panels">
+  <div class="panel">
+    <h2>Activities by sector</h2>
+    <div class="donutwrap">
+      <div class="donut" style="background:{{ donut_gradient }}"><div class="hole"><small>Total</small><b>{{ donut_total }}</b><small>activities</small></div></div>
+      <div class="legend">
+        {% for r in by_sector %}<div><span class="dot" style="background:{{ r.color }}"></span>{{ r.name }} &nbsp;{{ r.activities }} ({{ r.pct }}%)</div>
+        {% empty %}<div>No approved activities this month.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Most active parishes</h2>
+    {% if bars %}
+    <div class="vbars">
+      {% for r in bars %}
+      <div class="vcol"><div class="vwrap"><div class="vbar" style="height:{{ r.width }}%"></div></div><div class="vlab">{{ r.name }}<b>{{ r.activities }}</b></div></div>
+      {% endfor %}
+    </div>
+    {% else %}<p>No parishes registered.</p>{% endif %}
+  </div>
+  <div class="panel">
+    <h2>Six-month trend</h2>
+    <svg viewBox="0 0 300 140" class="line">
+      <line x1="10" y1="110" x2="295" y2="110" stroke="#dde5dd"/>
+      <polyline fill="none" stroke="#1e6fd9" stroke-width="2" points="{{ line }}"/>
+      {% for t in trend %}
+      <circle cx="{{ t.x }}" cy="{{ t.y }}" r="3" fill="#1e6fd9"/>
+      <text x="{{ t.x }}" y="{{ t.y|add:'-6' }}" text-anchor="middle" font-size="9" fill="#1b2b1b">{{ t.activities }}</text>
+      <text x="{{ t.x }}" y="130" text-anchor="middle" font-size="9" fill="#5a6b5a">{{ t.label }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <h2>Parish coverage</h2>
+    <div class="tbl">
+      <table>
+        <tr><th>Parish</th><th>Activities</th><th>People reached</th><th>Last activity</th></tr>
+        {% for r in parish_rows %}
+        <tr><td>{{ r.name }}</td>
+          <td>{% if r.activities %}{{ r.activities }}{% else %}<span class="muted">none this month</span>{% endif %}</td>
+          <td>{{ r.reached }}</td><td>{{ r.last|date:"d M Y"|default:"-" }}</td></tr>
+        {% empty %}<tr><td colspan="4">No parishes registered for this sub-county.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>PDM in this sub-county</h2>
+    {% for label, value in pdm_rows %}<div class="row"><span>{{ label }}</span><b style="font-size:15px">{{ value }}</b></div>{% endfor %}
+    <p style="margin:10px 0 0"><a href="{% url 'pdm_list' %}?sub_county={{ sc.pk }}">Open PDM register</a></p>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <h2>Recent activities</h2>
+    <div class="tbl">
+      <table>
+        <tr><th>Date</th><th>Activity</th><th>Sector</th><th>Parish</th><th>Officer</th><th>Reached</th></tr>
+        {% for a in recent %}
+        <tr>
+          <td>{{ a.date|date:"d M Y" }}</td>
+          <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_type }}</a></td>
+          <td><span class="badge {{ a.department.name|lower }}">{{ a.department }}</span></td>
+          <td>{{ a.parish.name|default:"-" }}</td>
+          <td>{{ a.officer.get_full_name|default:a.officer.username }}</td>
+          <td>{{ a.total_beneficiaries }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="6">No approved activities this month.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Officers active here</h2>
+    {% for r in officers %}
+    <div class="hbar"><div>{{ r.name }}</div><div class="track"><div class="fill" style="width:{% widthratio r.activities officers.0.activities 100 %}%"></div></div><div class="num">{{ r.activities }}</div></div>
+    {% empty %}<p>No approved activities this month.</p>{% endfor %}
+  </div>
+</div>
+
+{% if photos %}
+<div class="panel" style="margin-bottom:12px">
+  <h2>Latest photos</h2>
+  <div class="thumbs">
+    {% for p in photos %}<a href="{% url 'activity_detail' p.activity_id %}"><img src="{% url 'photo_file' p.pk %}" alt="Activity photo"></a>{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="panel" style="margin-bottom:12px">
+  <h2>Reports</h2>
+  <div class="quick">
+    <a class="c-blue" href="{% url 'report' %}?type=monthly&sub_county={{ sc.pk }}">Monthly report</a>
+    <a class="c-green" href="{% url 'report' %}?type=quarterly&sub_county={{ sc.pk }}">Quarterly report</a>
+    <a class="c-orange" href="{% url 'report' %}?type=annual&sub_county={{ sc.pk }}">Annual report</a>
+  </div>
+</div>
+{% endblock %}

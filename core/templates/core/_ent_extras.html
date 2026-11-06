@@ -1,0 +1,16 @@
+{% if rows %}
+<div class="panel" style="margin-bottom:12px">
+  <h2>Bee keeping, black soldier fly, vermin and collaboration</h2>
+  <div class="tbl">
+    <table>
+      <tr><th>Register</th><th>Registered</th><th>New this month</th><th>Active</th></tr>
+      {% for r in rows %}
+      <tr><td><a href="{{ r.url }}">{{ r.label }}</a></td><td>{{ r.total }}</td><td>{{ r.new }}</td><td>{% if r.active is not None %}{{ r.active }}{% else %}-{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="tiles" style="margin-top:12px">
+    {% for t in measures %}<div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span></div>{% endfor %}
+  </div>
+</div>
+{% endif %}

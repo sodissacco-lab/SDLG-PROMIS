@@ -1,0 +1,39 @@
+{% extends "core/adm_base.html" %}
+{% block adm %}
+<div class="panel">
+  <h2>Audit trail</h2>
+  <form class="adm-bar" method="get">
+    <input name="q" value="{{ q }}" placeholder="Search">
+    <select name="user">
+      <option value="">All users</option>
+      {% for u in users %}<option value="{{ u.pk }}" {% if u.pk|stringformat:"s" == user_id %}selected{% endif %}>{{ u.username }}</option>{% endfor %}
+    </select>
+    <select name="action">
+      <option value="">All actions</option>
+      {% for a in actions %}<option value="{{ a }}" {% if a == action %}selected{% endif %}>{{ a|capfirst }}</option>{% endfor %}
+    </select>
+    <button class="adm-btn alt" type="submit">Filter</button>
+  </form>
+  <div class="tbl">
+    <table>
+      <tr><th>When</th><th>User</th><th>Action</th><th>What</th><th>Record</th></tr>
+      {% for r in page %}
+      <tr>
+        <td>{{ r.created_at|date:"d M Y H:i" }}</td>
+        <td>{{ r.user.username|default:"-" }}</td>
+        <td>{{ r.action|capfirst }}</td>
+        <td>{{ r.model_name|capfirst }}</td>
+        <td>{{ r.summary }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">No entries yet.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="adm-pager">
+    {% if page.has_previous %}<a href="?{{ keep }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?{{ keep }}&page={{ page.next_page_number }}">Next</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

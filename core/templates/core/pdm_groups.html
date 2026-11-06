@@ -1,0 +1,32 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a;background:#f5f8f5}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+</style>
+<h2 style="margin-top:0">PDM groups</h2>
+<div class="dl">
+  {% if can_add %}<a class="btn" href="{% url 'pdm_group_new' %}">+ Register group</a>{% endif %}
+  <a class="btn alt" href="{% url 'pdm_list' %}">Back to register</a>
+</div>
+<div class="card" style="overflow-x:auto;max-width:none">
+  <table>
+    <tr><th>Group</th><th>Sub-county</th><th>Parish</th><th>Enterprise</th><th>Contact</th><th>Members</th></tr>
+    {% for g in groups %}
+    <tr>
+      <td>{{ g.name }}</td>
+      <td>{{ g.sub_county }}</td>
+      <td>{{ g.parish.name }}</td>
+      <td>{{ g.enterprise|default:"-" }}</td>
+      <td>{{ g.contact_person|default:"-" }}{% if g.phone %} · {{ g.phone }}{% endif %}</td>
+      <td><a href="{% url 'pdm_list' %}?group={{ g.pk }}">{{ g.members_n }}</a></td>
+    </tr>
+    {% empty %}<tr><td colspan="6">No groups registered yet.</td></tr>{% endfor %}
+  </table>
+</div>
+</div>
+{% endblock %}

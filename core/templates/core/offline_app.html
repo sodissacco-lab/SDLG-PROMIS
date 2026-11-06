@@ -1,0 +1,375 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SD-PROMIS Field</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1b6b3a">
+<link rel="icon" href="{% static 'core/pwa/icon-192.png' %}">
+<link rel="apple-touch-icon" href="{% static 'core/pwa/icon-192.png' %}">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#f3f5f4;color:#1c2b22}
+  header{background:#1b6b3a;color:#fff;padding:10px 14px;position:sticky;top:0;z-index:5}
+  header h1{margin:0;font-size:17px}
+  header small{opacity:.85}
+  #badge{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:14px;font-size:13px;background:#fff;color:#1c2b22}
+  #badge.ok{background:#d7f2e0}
+  #badge.wait{background:#ffe2b8}
+  #badge.bad{background:#ffd3cf}
+  main{padding:12px;max-width:640px;margin:0 auto}
+  section{background:#fff;border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  h2{font-size:15px;margin:0 0 10px}
+  label{display:block;font-size:13px;font-weight:600;margin:10px 0 3px}
+  input,select,textarea{width:100%;padding:10px;font-size:16px;border:1px solid #b7c2bb;border-radius:8px;background:#fff}
+  textarea{min-height:70px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  button{font-size:16px;padding:11px 14px;border:0;border-radius:8px;background:#1b6b3a;color:#fff;width:100%;margin-top:10px}
+  button.alt{background:#fff;color:#1b6b3a;border:1px solid #1b6b3a}
+  button:disabled{opacity:.5}
+  .row{display:flex;gap:8px}
+  .row button{margin-top:10px}
+  .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .thumbs img{width:64px;height:64px;object-fit:cover;border-radius:6px}
+  .rec{border-top:1px solid #e3e8e5;padding:9px 0;font-size:14px}
+  .rec:first-child{border-top:0}
+  .tag{font-size:12px;padding:2px 8px;border-radius:10px;background:#eee;margin-left:6px}
+  .tag.ok{background:#d7f2e0}.tag.wait{background:#ffe2b8}.tag.bad{background:#ffd3cf}
+  .err{color:#b3261e;font-size:13px}
+  .hint{font-size:12px;color:#5b6b62}
+  a{color:#1b6b3a}
+</style>
+</head>
+<body>
+<header>
+  <h1>SDLG-Production MIS &middot; Field mode</h1>
+  <small id="who"></small><br>
+  <span id="badge">Starting&hellip;</span>
+</header>
+<main>
+  <section>
+    <h2>New activity</h2>
+    <form id="f" autocomplete="off">
+      <label>Date</label><input type="date" id="date" required>
+      <label>Department / sector</label><select id="department" required></select>
+      <label>Activity type</label><select id="activity_type" required></select>
+      <div class="grid">
+        <div><label>Sub-county</label><select id="sub_county" required></select></div>
+        <div><label>Parish</label><select id="parish" required></select></div>
+      </div>
+      <label>Village</label><input id="village">
+      <label>What was done</label><textarea id="description"></textarea>
+      <label>Findings</label><textarea id="findings"></textarea>
+      <label>Action taken</label><textarea id="action_taken"></textarea>
+      <div class="grid">
+        <div><label>Male</label><input type="number" min="0" id="male" value="0" inputmode="numeric"></div>
+        <div><label>Female</label><input type="number" min="0" id="female" value="0" inputmode="numeric"></div>
+        <div><label>Youth (of those)</label><input type="number" min="0" id="youth" value="0" inputmode="numeric"></div>
+        <div><label>PWD (of those)</label><input type="number" min="0" id="pwd" value="0" inputmode="numeric"></div>
+      </div>
+
+      <label>Location (GPS)</label>
+      <div class="row">
+        <input id="gps" readonly placeholder="Not captured yet">
+        <button type="button" class="alt" id="gpsbtn" style="width:auto">Get GPS</button>
+      </div>
+
+      <label>Photos (up to 6, stamped on the phone)</label>
+      <input type="file" id="photos" accept="image/*" capture="environment" multiple>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="hint">Each photo is shrunk and stamped with activity, date, officer and GPS before saving.</div>
+
+      <div class="err" id="err"></div>
+      <div class="row">
+        <button type="button" class="alt" id="savedraft">Save as draft</button>
+        <button type="button" id="savesubmit">Save &amp; submit</button>
+      </div>
+    </form>
+  </section>
+
+  <section>
+    <h2>On this phone</h2>
+    <button class="alt" id="syncnow" style="margin-top:0">Send saved records now</button>
+    <div id="list"></div>
+  </section>
+
+  <section>
+    <a href="/">Back to the full system</a>
+    <div class="hint">Open this page once with internet each day so the lists stay up to date. Then it works with no signal.</div>
+  </section>
+</main>
+
+{% verbatim %}
+<script>
+(function () {
+  'use strict';
+  var DB = null, REF = null;
+
+  function $(id) { return document.getElementById(id); }
+  function uid() {
+    var a = new Uint8Array(12); crypto.getRandomValues(a);
+    return Array.prototype.map.call(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
+  function cookie(name) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  // ------------------------------------------------------------ storage
+  function openDB() {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open('promis', 1);
+      r.onupgradeneeded = function () {
+        r.result.createObjectStore('records', { keyPath: 'client_id' });
+        r.result.createObjectStore('kv');
+      };
+      r.onsuccess = function () { DB = r.result; res(); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function tx(store, mode, fn) {
+    return new Promise(function (res, rej) {
+      var t = DB.transaction(store, mode), s = t.objectStore(store), out = fn(s);
+      t.oncomplete = function () { res(out && out.result !== undefined ? out.result : undefined); };
+      t.onerror = function () { rej(t.error); };
+    });
+  }
+  function put(rec) { return tx('records', 'readwrite', function (s) { s.put(rec); }); }
+  function all() { return tx('records', 'readonly', function (s) { return s.getAll(); }); }
+  function del(id) { return tx('records', 'readwrite', function (s) { s.delete(id); }); }
+  function kvSet(k, v) { return tx('kv', 'readwrite', function (s) { s.put(v, k); }); }
+  function kvGet(k) { return tx('kv', 'readonly', function (s) { return s.get(k); }); }
+
+  // ---------------------------------------------------------- reference
+  function loadRef() {
+    return fetch('/offline-app/data/', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (r.status === 403 || r.redirected) throw new Error('login');
+        if (!r.ok) throw new Error('bad');
+        return r.json();
+      })
+      .then(function (d) { return kvSet('ref', d).then(function () { return d; }); })
+      .catch(function () { return kvGet('ref'); });
+  }
+
+  function fill(sel, items, label, keep) {
+    var cur = keep ? sel.value : '';
+    sel.innerHTML = '<option value="">' + label + '</option>';
+    items.forEach(function (i) {
+      var o = document.createElement('option');
+      o.value = i.id !== undefined ? i.id : i; o.textContent = i.name !== undefined ? i.name : i;
+      sel.appendChild(o);
+    });
+    if (cur) sel.value = cur;
+  }
+  function setupForm() {
+    $('who').textContent = REF.user || '';
+    fill($('department'), REF.departments, 'Choose department');
+    fill($('sub_county'), REF.sub_counties, 'Choose sub-county');
+    if (REF.my_department) $('department').value = REF.my_department;
+    if (REF.my_sub_county) $('sub_county').value = REF.my_sub_county;
+    onDept(); onSub();
+  }
+  function deptName() {
+    var d = REF.departments.filter(function (x) { return String(x.id) === $('department').value; })[0];
+    return d ? d.name : '';
+  }
+  function onDept() {
+    var types = REF.activity_types[deptName()] || [];
+    fill($('activity_type'), types, types.length ? 'Choose activity type' : 'No types saved for this department');
+  }
+  function onSub() {
+    var sid = $('sub_county').value;
+    fill($('parish'), REF.parishes.filter(function (p) { return String(p.sub_county_id) === sid; }),
+         sid ? 'Choose parish' : 'Choose sub-county first');
+  }
+
+  // ---------------------------------------------------------------- GPS
+  var pos = null;
+  function getGPS() {
+    if (!navigator.geolocation) { $('gps').placeholder = 'GPS not available'; return; }
+    $('gps').placeholder = 'Finding location…';
+    navigator.geolocation.getCurrentPosition(function (p) {
+      pos = { latitude: +p.coords.latitude.toFixed(6), longitude: +p.coords.longitude.toFixed(6) };
+      $('gps').value = pos.latitude + ', ' + pos.longitude;
+    }, function () { $('gps').placeholder = 'Could not get GPS. Try again outdoors.'; },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+  }
+
+  // ------------------------------------------------------------- photos
+  var photos = [];
+  function stampPhoto(file, lines) {
+    return new Promise(function (res) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var max = 1280, k = Math.min(1, max / Math.max(img.width, img.height));
+        var w = Math.round(img.width * k), h = Math.round(img.height * k);
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        var g = c.getContext('2d'); g.drawImage(img, 0, 0, w, h);
+        var fs = Math.max(14, Math.round(w / 38)), pad = Math.round(fs * 0.5);
+        g.font = fs + 'px sans-serif';
+        var bh = lines.length * (fs + 4) + pad * 2;
+        g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, h - bh, w, bh);
+        g.fillStyle = '#fff'; g.textBaseline = 'top';
+        lines.forEach(function (t, i) { g.fillText(t, pad, h - bh + pad + i * (fs + 4)); });
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { res(b); }, 'image/jpeg', 0.72);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); res(file); };
+      img.src = url;
+    });
+  }
+  function stampLines() {
+    var sub = $('sub_county').selectedOptions[0], par = $('parish').selectedOptions[0];
+    return [
+      ($('activity_type').value || 'Activity') + ' | ' + ($('date').value || ''),
+      'Officer: ' + (REF.user || '') + ' | ' + (par && par.value ? par.textContent : '') + ', ' + (sub && sub.value ? sub.textContent : ''),
+      'GPS: ' + (pos ? pos.latitude + ', ' + pos.longitude : 'not captured')
+    ];
+  }
+  function addPhotos(files) {
+    var lines = stampLines(), list = Array.prototype.slice.call(files);
+    var room = 6 - photos.length;
+    list.slice(0, room).reduce(function (p, f) {
+      return p.then(function () {
+        return stampPhoto(f, lines).then(function (b) {
+          photos.push(b);
+          var im = document.createElement('img'); im.src = URL.createObjectURL(b);
+          $('thumbs').appendChild(im);
+        });
+      });
+    }, Promise.resolve());
+    $('photos').value = '';
+  }
+
+  // ----------------------------------------------------------- save form
+  function readForm(submit) {
+    var n = function (id) { return parseInt($(id).value, 10) || 0; };
+    var rec = {
+      client_id: uid(), saved_at: new Date().toISOString(), submit: !!submit,
+      state: 'wait', error: '',
+      date: $('date').value, department: $('department').value,
+      activity_type: $('activity_type').value, sub_county: $('sub_county').value,
+      parish: $('parish').value, village: $('village').value.trim(),
+      description: $('description').value.trim(), findings: $('findings').value.trim(),
+      action_taken: $('action_taken').value.trim(),
+      male: n('male'), female: n('female'), youth: n('youth'), pwd: n('pwd'),
+      latitude: pos ? pos.latitude : null, longitude: pos ? pos.longitude : null,
+      photos: photos.slice(),
+      label: ($('activity_type').value || '') + ' - ' + ($('date').value || '')
+    };
+    return rec;
+  }
+  function check(r) {
+    if (!r.date) return 'Choose the date.';
+    if (r.date > new Date().toISOString().slice(0, 10)) return 'The date cannot be in the future.';
+    if (!r.department) return 'Choose the department.';
+    if (!r.activity_type) return 'Choose the activity type.';
+    if (!r.sub_county || !r.parish) return 'Choose the sub-county and parish.';
+    var t = r.male + r.female;
+    if (r.youth > t || r.pwd > t) return 'Youth or PWD cannot be more than male plus female.';
+    return '';
+  }
+  function save(submit) {
+    var r = readForm(submit), e = check(r);
+    $('err').textContent = e;
+    if (e) return;
+    put(r).then(function () {
+      photos = []; $('thumbs').innerHTML = '';
+      ['village', 'description', 'findings', 'action_taken'].forEach(function (i) { $(i).value = ''; });
+      ['male', 'female', 'youth', 'pwd'].forEach(function (i) { $(i).value = 0; });
+      render(); sync();
+    });
+  }
+
+  // ---------------------------------------------------------------- sync
+  var syncing = false;
+  function sendOne(r) {
+    var fd = new FormData(), body = {};
+    Object.keys(r).forEach(function (k) { if (k !== 'photos') body[k] = r[k]; });
+    fd.append('payload', JSON.stringify(body));
+    (r.photos || []).forEach(function (b, i) { fd.append('photos', b, 'photo' + (i + 1) + '.jpg'); });
+    return fetch('/offline-app/sync/', {
+      method: 'POST', body: fd, credentials: 'same-origin',
+      headers: { 'X-CSRFToken': cookie('csrftoken') }
+    }).then(function (resp) {
+      return resp.json().catch(function () { return {}; }).then(function (j) {
+        return { status: resp.status, json: j };
+      });
+    });
+  }
+  function sync() {
+    if (syncing || !navigator.onLine) { render(); return Promise.resolve(); }
+    syncing = true;
+    return all().then(function (recs) {
+      var todo = recs.filter(function (r) { return r.state !== 'done' && r.state !== 'rejected'; });
+      return todo.reduce(function (p, r) {
+        return p.then(function () {
+          return sendOne(r).then(function (o) {
+            if (o.json && o.json.ok) { r.state = 'done'; r.error = ''; r.server_id = o.json.id; return put(r); }
+            if (o.status === 422 || o.status === 400) { r.state = 'rejected'; r.error = (o.json && o.json.error) || 'Rejected'; return put(r); }
+            if (o.status === 403) { r.error = 'Session expired. Open the full system, sign in, then return.'; return put(r); }
+            r.error = 'Server problem, will retry.'; return put(r);
+          }).catch(function () { r.error = 'No connection, will retry.'; return put(r); });
+        });
+      }, Promise.resolve());
+    }).then(function () { syncing = false; render(); }, function () { syncing = false; render(); });
+  }
+
+  // -------------------------------------------------------------- render
+  function render() {
+    all().then(function (recs) {
+      recs.sort(function (a, b) { return a.saved_at < b.saved_at ? 1 : -1; });
+      var waiting = recs.filter(function (r) { return r.state === 'wait'; }).length;
+      var bad = recs.filter(function (r) { return r.state === 'rejected'; }).length;
+      var b = $('badge');
+      if (bad) { b.className = 'bad'; b.textContent = bad + ' rejected - check the list'; }
+      else if (waiting) { b.className = 'wait'; b.textContent = waiting + ' waiting to send' + (navigator.onLine ? '' : ' (no signal)'); }
+      else { b.className = 'ok'; b.textContent = navigator.onLine ? 'All sent' : 'Saved - no signal'; }
+      var box = $('list'); box.innerHTML = '';
+      if (!recs.length) { box.innerHTML = '<div class="hint" style="margin-top:8px">Nothing saved on this phone yet.</div>'; return; }
+      recs.forEach(function (r) {
+        var d = document.createElement('div'); d.className = 'rec';
+        var tag = r.state === 'done' ? ['ok', 'Sent'] : r.state === 'rejected' ? ['bad', 'Rejected'] : ['wait', 'Waiting'];
+        d.innerHTML = '<b></b><span class="tag ' + tag[0] + '">' + tag[1] + '</span>' +
+          '<div class="hint"></div><div class="err"></div>';
+        d.querySelector('b').textContent = r.label;
+        d.querySelector('.hint').textContent = (r.submit ? 'Submitted' : 'Draft') + ' · ' + (r.photos ? r.photos.length : 0) + ' photo(s)';
+        d.querySelector('.err').textContent = r.error || '';
+        if (r.state === 'done' || r.state === 'rejected') {
+          var x = document.createElement('button'); x.className = 'alt'; x.textContent = 'Remove from phone';
+          x.onclick = function () { del(r.client_id).then(render); };
+          d.appendChild(x);
+        }
+        box.appendChild(d);
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------- boot
+  function boot() {
+    $('date').value = new Date().toISOString().slice(0, 10);
+    $('department').onchange = onDept;
+    $('sub_county').onchange = onSub;
+    $('gpsbtn').onclick = getGPS;
+    $('photos').onchange = function () { addPhotos(this.files); };
+    $('savedraft').onclick = function () { save(false); };
+    $('savesubmit').onclick = function () { save(true); };
+    $('syncnow').onclick = function () { sync(); };
+    window.addEventListener('online', function () { sync(); });
+    window.addEventListener('offline', render);
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+
+    openDB().then(loadRef).then(function (d) {
+      if (!d) { $('badge').textContent = 'Open once with internet first'; $('badge').className = 'bad'; return; }
+      REF = d; setupForm(); getGPS(); render(); sync();
+    });
+  }
+  boot();
+})();
+</script>
+{% endverbatim %}
+</body>
+</html>

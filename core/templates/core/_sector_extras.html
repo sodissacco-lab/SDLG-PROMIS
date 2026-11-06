@@ -1,0 +1,33 @@
+{% if rows or measures or species or alerts %}
+<div class="panel" style="margin-bottom:12px">
+  {% if alerts %}
+  <h2>Alerts</h2>
+  <div class="card" style="max-width:none;border-color:#e0a1a8;background:#fdf1f2">
+    {% for a in alerts %}<div class="row"><a href="{{ a.url }}">{{ a.text }}</a><span>since {{ a.date|date:"d M Y" }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+  {% if rows %}
+  <h2>More registers</h2>
+  <div class="tbl">
+    <table>
+      <tr><th>Register</th><th>Registered</th><th>New this month</th><th>Active</th></tr>
+      {% for r in rows %}
+      <tr><td><a href="{{ r.url }}">{{ r.label }}</a></td><td>{{ r.total }}</td><td>{{ r.new }}</td><td>{% if r.active is not None %}{{ r.active }}{% else %}-{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+  {% if species %}
+  <h2>Livestock counted (latest count per farmer and species)</h2>
+  <div class="tiles">
+    {% for s in species %}<div class="tile c-teal"><b>{{ s.value }}</b><span>{{ s.label }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+  {% if measures %}
+  <h2>Measured results this month</h2>
+  <div class="tiles">
+    {% for t in measures %}<div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}

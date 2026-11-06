@@ -1,0 +1,30 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+</style>
+<h2 style="margin-top:0">{{ data.title }}</h2>
+<p>{{ data.period }}</p>
+<div class="dl">
+  <a class="btn" href="{% url 'pdm_summary_pdf' %}">Download PDF</a>
+  <a class="btn alt" href="{% url 'pdm_summary_docx' %}">Download Word</a>
+  <a class="btn alt" href="{% url 'pdm_list' %}">Back to register</a>
+</div>
+{% for t in tables %}
+<h2>{{ t.title }}</h2>
+<div class="card" style="overflow-x:auto;max-width:none">
+  {% if t.rows %}
+  <table>
+    <tr>{% for h in t.header %}<th>{{ h }}</th>{% endfor %}</tr>
+    {% for row in t.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+  </table>
+  {% else %}<p>No records.</p>{% endif %}
+</div>
+{% endfor %}
+</div>
+{% endblock %}

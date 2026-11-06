@@ -1,0 +1,23 @@
+{% extends "core/adm_base.html" %}
+{% block adm %}
+<div class="panel adm-form">
+  <h2>Add many parishes</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="row">
+      <label>Sub-county</label>
+      <select name="sub_county" required>
+        <option value="">Choose</option>
+        {% for s in subs %}<option value="{{ s.pk }}">{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="row">
+      <label>Parish names, one per line</label>
+      <textarea name="names" rows="10" required></textarea>
+      <div class="help">Names already in that sub-county are skipped.</div>
+    </div>
+    <button class="adm-btn" type="submit">Add parishes</button>
+    <a class="adm-btn alt" href="{% url 'adm_list' 'parishes' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

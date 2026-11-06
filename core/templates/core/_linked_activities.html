@@ -1,0 +1,22 @@
+{% if show %}
+<h2>Activities linked to this {{ label }} ({{ total }})</h2>
+<div class="dl">
+  <a class="btn" href="{{ new_url }}">Record an activity</a>
+</div>
+{% if is_site %}
+<p>{% if last_inspection %}Last inspection: <b>{{ last_inspection|date:"d M Y" }}</b>{% else %}No approved inspection has been linked to this site yet.{% endif %}</p>
+{% endif %}
+<div class="card" style="overflow-x:auto;max-width:none">
+  <table>
+    <tr><th>Date</th><th>Activity</th><th>Officer</th><th>People reached</th></tr>
+    {% for a in items %}
+    <tr>
+      <td>{{ a.date|date:"d M Y" }}</td>
+      <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_type }}</a></td>
+      <td>{{ a.officer.get_full_name|default:a.officer.username }}</td>
+      <td>{{ a.total_beneficiaries }}</td>
+    </tr>
+    {% empty %}<tr><td colspan="4">No approved activities linked yet.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endif %}

@@ -1,0 +1,69 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  select{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a;background:#f5f8f5}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .filterbox{max-width:900px}
+  .filterbox label{font-size:13px;color:#4a5a4a;display:block}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 12px}
+  .stat{background:#fff;border:1px solid #dde5dd;border-radius:10px;padding:10px 14px;min-width:120px}
+  .stat b{display:block;font-size:22px}
+  .stat span{display:block;font-size:12px;color:#5a6b5a}
+  .note{font-size:13px;color:#4a5a4a;margin:0 0 8px}
+</style>
+<h2 style="margin-top:0">{{ cfg.label }}</h2>
+<p class="note">{{ kind_label }}</p>
+<div class="stats">
+  {% for label, value in stats %}<div class="stat"><b>{{ value }}</b><span>{{ label }}</span></div>{% endfor %}
+</div>
+
+<form method="get" class="card filterbox">
+  <div class="filters">
+    <div><label>Search</label><input type="text" name="q" value="{{ q }}"></div>
+    {% if cfg.sub_county_path %}
+    <div><label>Sub-county</label>
+      <select name="sub_county">
+        <option value="">All</option>
+        {% for s in sub_counties %}<option value="{{ s.pk }}" {% if s.pk == sub_county_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></div>
+    {% endif %}
+    {% if status_choices %}
+    <div><label>Status</label>
+      <select name="status">
+        <option value="">All</option>
+        {% for code, label in status_choices %}<option value="{{ code }}" {% if code == status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    {% endif %}
+  </div>
+  <button class="btn" type="submit">Search</button>
+</form>
+
+<div class="dl">
+  {% if can_add %}<a class="btn" href="{% url 'reg_new' cfg.key %}">+ New {{ cfg.singular }}</a>{% endif %}
+  <a class="btn alt" href="{% url 'dashboard' %}">Back to home</a>
+</div>
+
+<div class="card" style="overflow-x:auto;max-width:none">
+  <table>
+    <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+    {% for r in rows %}
+    <tr>
+      <td><a href="{{ r.url }}">{{ r.cells.0 }}</a></td>
+      {% for c in r.cells|slice:"1:" %}<td>{{ c }}</td>{% endfor %}
+    </tr>
+    {% empty %}<tr><td colspan="{{ headers|length }}">Nothing registered yet.</td></tr>{% endfor %}
+  </table>
+</div>
+<p>
+  {% if page.has_previous %}<a href="?{{ params }}&page={{ page.previous_page_number }}">&larr; Previous</a>{% endif %}
+  Page {{ page.number }} of {{ page.paginator.num_pages }}
+  {% if page.has_next %}<a href="?{{ params }}&page={{ page.next_page_number }}">Next &rarr;</a>{% endif %}
+</p>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "core/permit_base.html" %}
+{% block permit %}
+<div class="panel">
+  <div class="pm-head">
+    <h2>{{ p.get_permit_type_display }} <span class="pm-state {{ p.state }}">{{ p.state }}</span></h2>
+    <div>
+      <a class="pm-btn" href="{% url 'permit_pdf' p.pk %}" target="_blank">Print permit</a>
+      {% if can_act %}<a class="pm-btn alt" href="{% url 'permit_edit' p.pk %}">Edit</a>{% endif %}
+      <a class="pm-btn alt" href="{% url 'permit_list' %}">Back to the list</a>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      {% for label, value in rows %}<tr><th style="width:36%;text-align:left">{{ label }}</th><td>{{ value }}</td></tr>{% endfor %}
+    </table>
+  </div>
+
+  {% if can_status %}
+  <div class="pm-two">
+    <form method="post" action="{% url 'permit_action' p.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="used">
+      <h3>Mark as completed</h3>
+      <p class="help">Use this when the animals or fish have arrived at the destination.</p>
+      <input name="note" placeholder="Note (optional)" style="width:100%;padding:8px;margin-bottom:8px">
+      <button class="pm-btn" type="submit">Completed</button>
+    </form>
+    <form method="post" action="{% url 'permit_action' p.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="cancel">
+      <h3>Cancel this permit</h3>
+      <p class="help">A cancelled permit prints with a CANCELLED mark and shows as cancelled when scanned.</p>
+      <input name="note" placeholder="Reason for cancelling" required style="width:100%;padding:8px;margin-bottom:8px">
+      <button class="pm-btn red" type="submit">Cancel permit</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

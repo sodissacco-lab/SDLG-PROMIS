@@ -1,0 +1,50 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a;background:#f5f8f5}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .info{max-width:760px}
+</style>
+<h2 style="margin-top:0">{{ b.name }}</h2>
+<div class="card info">
+  <div class="row"><span>Sex</span><span>{{ b.get_sex_display }}</span></div>
+  <div class="row"><span>Phone</span><span>{{ b.phone|default:"-" }}</span></div>
+  <div class="row"><span>Group</span><span>{{ b.group.name|default:"-" }}</span></div>
+  <div class="row"><span>Location</span><span>{{ b.sub_county }}, {{ b.parish.name }}{% if b.village %}, {{ b.village }}{% endif %}</span></div>
+  <div class="row"><span>Enterprise</span><span>{{ b.enterprise|default:"-" }}</span></div>
+  <div class="row"><span>Youth</span><span>{{ b.youth|yesno:"Yes,No" }}</span></div>
+  <div class="row"><span>Person with disability</span><span>{{ b.pwd|yesno:"Yes,No" }}</span></div>
+  <div class="row"><span>Amount received</span><span>UGX {{ b.amount_received|floatformat:"0g" }}{% if b.date_received %} on {{ b.date_received|date:"d M Y" }}{% endif %}</span></div>
+  <div class="row"><span>Loan status</span><span>{{ b.get_loan_status_display }}</span></div>
+  {% if b.notes %}<div class="row"><span>Notes</span><span>{{ b.notes|linebreaksbr }}</span></div>{% endif %}
+</div>
+<div class="dl">
+  {% if can_add %}<a class="btn" href="{% url 'pdm_visit_new' b.pk %}">+ Record monitoring visit</a>{% endif %}
+  {% if can_edit %}<a class="btn alt" href="{% url 'pdm_edit' b.pk %}">Edit</a>{% endif %}
+  <a class="btn alt" href="{% url 'pdm_list' %}">Back to register</a>
+</div>
+
+<h2>Monitoring visits ({{ visit_count }})</h2>
+<p>Revenue reported: UGX {{ revenue|floatformat:"0g" }} · Expenditure reported: UGX {{ spend|floatformat:"0g" }}</p>
+<div class="card" style="overflow-x:auto;max-width:none">
+  <table>
+    <tr><th>Date</th><th>Status</th><th>Revenue</th><th>Expenditure</th><th>Challenges</th><th>Action taken</th><th>Officer</th></tr>
+    {% for v in visits %}
+    <tr>
+      <td>{{ v.date|date:"d M Y" }}</td>
+      <td>{{ v.get_enterprise_status_display }}</td>
+      <td>{{ v.revenue|floatformat:"0g" }}</td>
+      <td>{{ v.expenditure|floatformat:"0g" }}</td>
+      <td>{{ v.challenges|default:"-" }}</td>
+      <td>{{ v.action_taken|default:"-" }}</td>
+      <td>{{ v.officer.get_full_name|default:v.officer.username }}</td>
+    </tr>
+    {% empty %}<tr><td colspan="7">No visits recorded yet.</td></tr>{% endfor %}
+  </table>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "core/shell.html" %}
+{% block extra_head %}
+<style>
+  h1{margin:0;font-size:24px;color:#14305c}
+  .sub{color:#5a6b5a;font-size:14px;margin:2px 0 14px}
+  .nav{display:flex;align-items:center;gap:14px;margin:0 0 14px;font-size:14px}
+  .nav a{text-decoration:none;color:#1e6fd9}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:12px}
+  .tile{border-radius:12px;color:#fff;padding:14px}
+  .tile b{display:block;font-size:30px;line-height:1.1}
+  .tile span{display:block;font-size:14px;margin:2px 0 6px}
+  .tile small{font-size:12px;opacity:.95}
+  .c-blue{background:linear-gradient(135deg,#1e6fd9,#3b8cf2)}
+  .c-green{background:linear-gradient(135deg,#2e9b4f,#47b86a)}
+  .c-orange{background:linear-gradient(135deg,#f08a12,#f5a73a)}
+  .c-teal{background:linear-gradient(135deg,#14a89d,#33c1b6)}
+  .c-purple{background:linear-gradient(135deg,#7b4bc7,#9468d8)}
+  .c-pink{background:linear-gradient(135deg,#d8456b,#e8688a)}
+  .c-red{background:linear-gradient(135deg,#e0483f,#ee6a62)}
+  .panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:12px}
+  .panel{background:#fff;border:1px solid #dde5dd;border-radius:12px;padding:14px}
+  .panel h2{font-size:16px;margin:0 0 10px;color:#14305c}
+  .donutwrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .donut{width:140px;height:140px;border-radius:50%;position:relative;flex-shrink:0}
+  .hole{position:absolute;inset:28px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .hole b{font-size:22px}.hole small{font-size:11px;color:#5a6b5a}
+  .legend div{display:flex;align-items:center;gap:6px;font-size:13px;margin:3px 0}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .vbars{display:flex;gap:8px;height:190px}
+  .vcol{flex:1;display:flex;flex-direction:column;min-width:0}
+  .vwrap{flex:1;display:flex;align-items:flex-end}
+  .vbar{width:100%;background:#1e6fd9;border-radius:4px 4px 0 0;min-height:3px}
+  .vlab{font-size:11px;text-align:center;color:#4a5a4a;margin-top:4px;word-break:break-word}
+  .vlab b{display:block;font-size:13px;color:#1b2b1b}
+  .line{width:100%;height:auto}
+  .leg2{display:flex;gap:14px;font-size:12px;margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a;background:#f5f8f5}
+  .badge{font-size:12px;padding:2px 10px;border-radius:10px;background:#e6ece6;white-space:nowrap}
+  .badge.crops{background:#d4edda}.badge.fisheries{background:#d6e8fb}.badge.veterinary{background:#fde8c8}
+  .badge.pdm{background:#f1d9fb}.badge.entomology{background:#e0e0e0}.badge.commercial{background:#fbd9e1}
+  .tbl{overflow-x:auto}
+  .split{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+  @media (max-width:900px){.split{grid-template-columns:1fr}}
+  .hbar{display:grid;grid-template-columns:38% 1fr 20%;gap:8px;align-items:center;padding:4px 0;font-size:13px}
+  .track{background:#e6ece6;border-radius:4px;height:10px}
+  .fill{background:#2e9b4f;border-radius:4px;height:10px}
+  .num{text-align:right;font-size:12px;color:#4a5a4a}
+  .quick{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  .quick a{border-radius:10px;color:#fff;text-decoration:none;padding:14px 8px;text-align:center;font-size:13px;font-weight:600}
+  .welcome{background:#e8f1fb;border:1px solid #bcd3ee;border-radius:12px;padding:12px 14px;font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+</style>
+{% endblock %}
+{% block content %}
+<h1>District dashboard</h1>
+<p class="sub">Overview of Production Department activities and key indicators (approved activities)</p>
+<div class="nav">
+  <a href="?{{ prev_query }}">&larr; Previous</a>
+  <b>{{ period }}</b>
+  <a href="?{{ next_query }}">Next &rarr;</a>
+</div>
+
+<div class="tiles">
+  {% for t in key_tiles %}
+  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  {% endfor %}
+</div>
+<div class="tiles">
+  {% for t in indicator_tiles %}
+  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  {% endfor %}
+</div>
+
+{% load register_tags %}{% district_registers %}<div class="panels">
+  <div class="panel">
+    <h2>Activities by category</h2>
+    <div class="donutwrap">
+      <div class="donut" style="background:{{ donut_gradient }}"><div class="hole"><small>Total</small><b>{{ donut_total }}</b><small>activities</small></div></div>
+      <div class="legend">
+        {% for r in by_department %}<div><span class="dot" style="background:{{ r.color }}"></span>{{ r.name }} &nbsp;{{ r.activities }} ({{ r.pct }}%)</div>
+        {% empty %}<div>No approved activities this month.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Activities by sub-county</h2>
+    {% if by_sub_county %}
+    <div class="vbars">
+      {% for r in by_sub_county %}
+      <div class="vcol"><div class="vwrap"><div class="vbar" style="height:{{ r.width }}%"></div></div><div class="vlab">{{ r.name }}<b>{{ r.activities }}</b></div></div>
+      {% endfor %}
+    </div>
+    {% else %}<p>No approved activities this month.</p>{% endif %}
+  </div>
+
+  <div class="panel">
+    <h2>Recent activity trend</h2>
+    <svg viewBox="0 0 300 140" class="line">
+      <line x1="10" y1="110" x2="295" y2="110" stroke="#dde5dd"/>
+      <polyline fill="none" stroke="#1e6fd9" stroke-width="2" points="{{ line_activities }}"/>
+      <polyline fill="none" stroke="#2e9b4f" stroke-width="2" points="{{ line_extension }}"/>
+      {% for t in trend %}
+      <circle cx="{{ t.x }}" cy="{{ t.ya }}" r="3" fill="#1e6fd9"/>
+      <circle cx="{{ t.x }}" cy="{{ t.ye }}" r="3" fill="#2e9b4f"/>
+      <text x="{{ t.x }}" y="130" text-anchor="middle" font-size="9" fill="#5a6b5a">{{ t.label }}</text>
+      {% endfor %}
+    </svg>
+    <div class="leg2"><span><span class="dot" style="background:#1e6fd9"></span> Total activities</span><span><span class="dot" style="background:#2e9b4f"></span> Extension visits</span></div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <h2>Recent activities</h2>
+    <div class="tbl">
+      <table>
+        <tr><th>Date</th><th>Activity</th><th>Category</th><th>Sub-county</th><th>Parish</th><th>Officer</th></tr>
+        {% for a in recent %}
+        <tr>
+          <td>{{ a.date|date:"d M Y" }}</td>
+          <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_type }}</a></td>
+          <td><span class="badge {{ a.department.name|lower }}">{{ a.department }}</span></td>
+          <td>{{ a.sub_county|default:"-" }}</td>
+          <td>{{ a.parish.name|default:"-" }}</td>
+          <td>{{ a.officer.get_full_name|default:a.officer.username }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="6">No approved activities this month.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Activities by officer</h2>
+    {% for r in officers %}
+    <div class="hbar"><div>{{ r.name }}</div><div class="track"><div class="fill" style="width:{% widthratio r.activities officers.0.activities 100 %}%"></div></div><div class="num">{{ r.activities }} · {{ r.reached }}</div></div>
+    {% empty %}<p>No approved activities this month.</p>{% endfor %}
+    <p class="sub" style="margin-top:8px">Activities · people reached</p>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <h2>Top activity types</h2>
+    {% for r in by_type %}
+    <div class="hbar"><div>{{ r.name }}</div><div class="track"><div class="fill" style="width:{{ r.width }}%"></div></div><div class="num">{{ r.activities }} · {{ r.reached }}</div></div>
+    {% empty %}<p>No approved activities this month.</p>{% endfor %}
+  </div>
+  <div class="panel">
+    <h2>Quick actions</h2>
+    <div class="quick">
+      {% for d in departments %}
+      <a class="c-{% cycle 'green' 'blue' 'orange' 'pink' 'purple' 'teal' %}" href="{% url 'activity_new' %}?department={{ d.pk }}">Add {{ d.name }} activity</a>
+      {% endfor %}
+      <a class="c-blue" href="{% url 'report' %}">Generate report</a>
+    </div>
+  </div>
+</div>
+
+<div class="welcome"><span><b>Welcome to the Soroti District Production Department MIS.</b> Record once in the field, and see it in every report.</span><i>"Integrated Data for Improved Service Delivery"</i></div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "core/shell.html" %}
+{# If the page opens without the sidebar or with an empty body, change the block name below #}
+{# to the content block used in reg_list.html. #}
+{% block content %}
+<style>
+  .pm-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .pm-btn{display:inline-block;background:#1b6b3a;color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:14px;text-decoration:none;cursor:pointer}
+  .pm-btn.alt{background:#fff;color:#1b6b3a;border:1px solid #1b6b3a}
+  .pm-btn.red{background:#b3261e}
+  .pm-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .pm-bar input,.pm-bar select{padding:7px;border:1px solid #bbb;border-radius:6px;max-width:100%}
+  .pm-msg{padding:9px 12px;border-radius:6px;margin-bottom:10px;background:#e7f4ea}
+  .pm-msg.error{background:#fdecea}
+  .pm-tabs a{margin-right:6px}
+  .pm-state{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;background:#eee}
+  .pm-state.Valid{background:#d7f2e0}.pm-state.Expired{background:#ffe2b8}
+  .pm-state.Cancelled{background:#ffd3cf}.pm-state.Completed{background:#dde7f7}
+  .pm-form .row{margin-bottom:12px}
+  .pm-form label{display:block;font-weight:600;margin-bottom:4px}
+  .pm-form input:not([type=checkbox]),.pm-form select,.pm-form textarea{width:100%;padding:8px;border:1px solid #bbb;border-radius:6px;box-sizing:border-box;font-size:15px}
+  .pm-form .chk label{display:inline;font-weight:400}
+  .pm-form .help{font-size:12px;color:#666}
+  .pm-form .err{color:#b3261e;font-size:13px}
+  .pm-form fieldset{border:1px solid #d8dfda;border-radius:8px;margin:0 0 14px;padding:10px 12px}
+  .pm-form legend{font-weight:700;color:#1b6b3a;padding:0 6px}
+  .pm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 14px}
+  .pm-pager{margin-top:10px;display:flex;gap:12px}
+  .pm-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+  .pm-two table{width:100%}
+</style>
+{% for m in messages %}<div class="pm-msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+{% block permit %}{% endblock %}
+{% endblock %}

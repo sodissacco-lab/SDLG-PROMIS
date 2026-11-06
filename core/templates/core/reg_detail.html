@@ -1,0 +1,53 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a;background:#f5f8f5}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .info{max-width:760px}
+</style>
+<h2 style="margin-top:0">{{ title }}</h2>
+<div class="card info">
+  {% for label, value in rows %}<div class="row"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}
+</div>
+<div class="dl">
+  {% if editable %}<a class="btn" href="{% url 'reg_edit' cfg.key obj.pk %}">Edit</a>{% endif %}
+  <a class="btn alt" href="{{ back }}">Back to {{ cfg.label|lower }}</a>
+</div>
+
+{% load link_tags %}{% linked_activities cfg obj %}{% for s in sections %}
+<h2>{{ s.title }} ({{ s.total }})</h2>
+{% if s.add %}<div class="dl"><a class="btn alt" href="{{ s.add }}">+ Add</a></div>{% endif %}
+<div class="card" style="overflow-x:auto;max-width:none">
+  <table>
+    <tr>{% for h in s.headers %}<th>{{ h }}</th>{% endfor %}</tr>
+    {% for r in s.rows %}
+    <tr>
+      <td><a href="{{ r.url }}">{{ r.cells.0 }}</a></td>
+      {% for c in r.cells|slice:"1:" %}<td>{{ c }}</td>{% endfor %}
+    </tr>
+    {% empty %}<tr><td colspan="{{ s.headers|length }}">None yet.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endfor %}
+
+{% if dups %}
+<h2>Possible duplicates</h2>
+<div class="card" style="max-width:none">
+  {% for d in dups %}
+  <div class="row">
+    <span>{{ d.name }} ({{ d.code }}) · {{ d.parish.name }} · {{ d.phone|default:"no phone" }}</span>
+    {% if can_merge %}
+    <form method="post" action="{% url 'reg_merge' cfg.key obj.pk d.pk %}" onsubmit="return confirm('Merge this record into the one you are viewing? This cannot be undone.')">{% csrf_token %}
+      <button class="btn alt" type="submit">Merge into this record</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "core/district.html" %}
+{% block content %}
+<style>
+  a.tile{display:block;text-decoration:none;color:#fff}
+  .c-grey{background:linear-gradient(135deg,#7d8a9b,#9aa6b5)}
+</style>
+<h1>Sub-counties</h1>
+<p class="sub">Open a sub-county to see its statistics and performance (approved activities)</p>
+<div class="nav">
+  <a href="?{{ prev_query }}">&larr; Previous</a>
+  <b>{{ period }}</b>
+  <a href="?{{ next_query }}">Next &rarr;</a>
+</div>
+<div class="tiles">
+  {% for c in cards %}
+  <a class="tile {% if c.activities %}c-blue{% else %}c-grey{% endif %}" href="{% url 'subcounty' c.sc.pk %}?{{ query }}">
+    <b>{{ c.activities }}</b><span>{{ c.sc.name }}</span><small>{{ c.reached }} people reached · {{ c.parishes }} parishes</small>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

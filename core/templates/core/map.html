@@ -1,0 +1,116 @@
+{% extends "core/shell.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="wide">
+<style>
+  select{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;font-family:inherit}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+  .filterbox{max-width:900px}
+  .filterbox label{font-size:13px;color:#4a5a4a;display:block}
+  #map{height:560px;border-radius:10px;border:1px solid #dde5dd}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:10px 0}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:4px}
+</style>
+<h2 style="margin-top:0">GIS &amp; Maps</h2>
+<form method="get" class="card filterbox">
+  <div class="filters">
+    <div><label>Year</label><input type="number" name="year" value="{{ year }}"></div>
+    <div><label>Month</label>
+      <select name="month">{% for num, name in months %}<option value="{{ num }}" {% if num == month %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
+    <div><label>Sector</label>
+      <select name="department"><option value="">All sectors</option>
+        {% for d in departments %}<option value="{{ d.pk }}" {% if d.pk == department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select></div>
+  </div>
+  <button class="btn" type="submit">Show on map</button>
+</form>
+<p><b>{{ count }}</b> approved activities with a GPS location in this selection. Tap a point for details.</p>
+<div class="legend">
+  <span><span class="dot" style="background:#1e6fd9"></span>Fisheries</span>
+  <span><span class="dot" style="background:#2e9b4f"></span>Crops</span>
+  <span><span class="dot" style="background:#f08a12"></span>Veterinary</span>
+  <span><span class="dot" style="background:#7b4bc7"></span>Entomology</span>
+  <span><span class="dot" style="background:#14a89d"></span>Commercial</span>
+</div>
+<div id="map"></div>
+<p style="font-size:12px;color:#5a6b5a">The base map needs an internet connection. Landing sites, ponds and traps appear when they have coordinates on their register page.</p>
+</div>
+
+{{ map_data|json_script:"map-data" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  var box = document.getElementById("map");
+  if (typeof L === "undefined") {
+    box.innerHTML = "<p style='padding:16px'>The map could not load. It needs an internet connection.</p>";
+    return;
+  }
+  var data = JSON.parse(document.getElementById("map-data").textContent);
+  var map = L.map("map").setView([1.7147, 33.6111], 10);
+  var street = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+  maxZoom: 19,
+  subdomains: "abcd",
+  attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+});
+var satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+  maxZoom: 19,
+  attribution: "Tiles &copy; Esri"
+});
+street.addTo(map);
+L.control.layers({ "Street map": street, "Satellite": satellite }, null, { position: "topleft" }).addTo(map);
+  var colours = {Fisheries: "#1e6fd9", Crops: "#2e9b4f", Veterinary: "#f08a12", Entomology: "#7b4bc7", Commercial: "#14a89d"};
+  var bounds = [];
+
+  function popup(lines, url) {
+    var box = document.createElement("div");
+    lines.forEach(function (text, i) {
+      var el = document.createElement(i === 0 ? "b" : "div");
+      el.textContent = text;
+      box.appendChild(el);
+    });
+    if (url) {
+      var a = document.createElement("a");
+      a.href = url;
+      a.textContent = "Open record";
+      box.appendChild(a);
+    }
+    return box;
+  }
+  function layer(items, style, lines) {
+    var group = L.layerGroup();
+    items.forEach(function (it) {
+      var m = L.circleMarker([it.lat, it.lng], style(it));
+      m.bindPopup(popup(lines(it), it.url));
+      m.addTo(group);
+      bounds.push([it.lat, it.lng]);
+    });
+    return group;
+  }
+  var overlays = {};
+  var acts = layer(data.activities,
+    function (a) { return {radius: 7, color: "#ffffff", weight: 1, fillColor: colours[a.sector] || "#6b7c93", fillOpacity: 0.9}; },
+    function (a) { return [a.type, a.date + " - " + a.sector, a.officer, a.place]; });
+  acts.addTo(map);
+  overlays["Activities (" + data.activities.length + ")"] = acts;
+  if (data.sites.length) {
+    var s = layer(data.sites, function () { return {radius: 10, color: "#0f2a57", weight: 3, fillColor: "#ffffff", fillOpacity: 1}; },
+      function (x) { return ["Landing site: " + x.name, x.place]; });
+    s.addTo(map); overlays["Landing sites (" + data.sites.length + ")"] = s;
+  }
+  if (data.ponds.length) {
+    var p = layer(data.ponds, function () { return {radius: 6, color: "#0b7285", weight: 2, fillColor: "#a5d8ff", fillOpacity: 1}; },
+      function (x) { return ["Fish pond: " + x.name, x.place]; });
+    p.addTo(map); overlays["Fish ponds (" + data.ponds.length + ")"] = p;
+  }
+  if (data.traps.length) {
+    var t = layer(data.traps, function () { return {radius: 6, color: "#5f3dc4", weight: 2, fillColor: "#d0bfff", fillOpacity: 1}; },
+      function (x) { return ["Trap: " + x.name, x.place]; });
+    t.addTo(map); overlays["Traps (" + data.traps.length + ")"] = t;
+  }
+  L.control.layers(null, overlays, {collapsed: false}).addTo(map);
+  if (bounds.length) { map.fitBounds(bounds, {padding: [30, 30], maxZoom: 14}); }
+})();
+</script>
+{% endblock %}

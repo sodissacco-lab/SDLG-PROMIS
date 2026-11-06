@@ -1,0 +1,35 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  .pill{display:inline-block;background:#e8f1fb;border:1px solid #bcd3ee;border-radius:12px;padding:3px 12px;font-size:12px;color:#14305c;margin-bottom:10px}
+  .wait{background:#fff8e1;border:1px solid #f0d98a}
+  .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .card p{margin:4px 0 12px;font-size:14px;line-height:1.5}
+</style>
+<h2 style="margin-top:0">{{ entry.label }}{% if sector %} <small style="color:#5a6b5a;font-weight:400">· {{ sector.name }}</small>{% endif %}</h2>
+<div class="pill">{{ entry.kind|title }}</div>
+<div class="card" style="margin-bottom:12px">
+  <span>What it records</span>
+  <p>{{ entry.what }}</p>
+  {% if entry.counted %}<span>How it will be counted</span><p>{{ entry.counted }}</p>{% endif %}
+  <span>Type</span>
+  <p>{{ kind_label }}</p>
+</div>
+<div class="card wait" style="margin-bottom:12px">
+  <b style="font-size:15px">Being built</b>
+  <p>This page is a placeholder. It will open the real register once it is built. Until then, field work in this area is recorded in the Daily Activity Register, and it already feeds the dashboards and reports.</p>
+  <div class="links">
+    <a class="btn" href="{{ new_activity }}">Record an activity</a>
+    {% if sector %}<a class="btn alt" href="{% url 'sector' sector.pk %}">{{ sector.name }} dashboard</a>{% endif %}
+  </div>
+</div>
+{% if related %}
+<div class="card">
+  <span>Other registers in this group</span>
+  <div class="links">
+    {% for r in related %}<a class="btn alt" href="{{ r.href }}">{{ r.label }}</a>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

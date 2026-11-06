@@ -1,0 +1,21 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  .adm-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .adm-btn{display:inline-block;background:#1b6b3a;color:#fff;border:0;border-radius:6px;padding:8px 14px;font-size:14px;text-decoration:none;cursor:pointer}
+  .adm-btn.alt{background:#fff;color:#1b6b3a;border:1px solid #1b6b3a}
+  .adm-btn.red{background:#b3261e}
+  .adm-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .adm-bar input,.adm-bar select{padding:7px;border:1px solid #bbb;border-radius:6px;max-width:100%}
+  .adm-form .row{margin-bottom:12px}
+  .adm-form label{display:block;font-weight:600;margin-bottom:4px}
+  .adm-form input:not([type=checkbox]),.adm-form select,.adm-form textarea{width:100%;padding:8px;border:1px solid #bbb;border-radius:6px;box-sizing:border-box}
+  .adm-form .help{font-size:12px;color:#666}
+  .adm-form .err{color:#b3261e;font-size:13px}
+  .adm-msg{padding:9px 12px;border-radius:6px;margin-bottom:10px;background:#e7f4ea}
+  .adm-msg.error{background:#fdecea}
+  .adm-pager{margin-top:10px;display:flex;gap:12px}
+</style>
+{% for m in messages %}<div class="adm-msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+{% block adm %}{% endblock %}
+{% endblock %}

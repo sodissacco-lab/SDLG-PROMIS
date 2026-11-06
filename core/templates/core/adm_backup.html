@@ -1,0 +1,26 @@
+{% extends "core/adm_base.html" %}
+{% block adm %}
+<div class="panel">
+  <div class="adm-head">
+    <h2>Backup & synchronization</h2>
+    <form method="post">{% csrf_token %}<button class="adm-btn" type="submit">Back up now</button></form>
+  </div>
+  <p>A backup saves the database, a data export and the photos folder. Download a copy to a flash disk or another computer regularly.</p>
+  <div class="tbl">
+    <table>
+      <tr><th>File</th><th>Saved</th><th>Size (MB)</th></tr>
+      {% for f in files %}
+      <tr>
+        <td><a href="{% url 'adm_backup_download' f.name %}">{{ f.name }}</a></td>
+        <td>{{ f.when|date:"d M Y H:i" }}</td>
+        <td>{{ f.size }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No backups yet.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <h3 style="margin-top:16px">Synchronization</h3>
+  <p>Phone-to-server synchronization is not available yet. It arrives with the offline mobile app, after the system is hosted on a server.</p>
+</div>
+{% endblock %}

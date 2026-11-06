@@ -1,0 +1,38 @@
+<!DOCTYPE html> {% load static %}
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}SDLG-Production MIS{% endblock %}</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#f4f6f4;color:#1b2b1b}
+header{background:#1f5c3a;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+header b{font-size:16px}
+header small{display:block;opacity:.8;font-size:12px}
+main{padding:16px;max-width:720px;margin:0 auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#fff;border-radius:10px;padding:14px;border:1px solid #dde5dd}
+.card span{font-size:13px;color:#5a6b5a;display:block}
+.card b{font-size:26px}
+h2{font-size:16px;margin:20px 0 8px}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e6ece6;font-size:14px}
+.btn{display:inline-block;background:#1f5c3a;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:15px;text-decoration:none;cursor:pointer}
+input{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;box-sizing:border-box}
+.linkbtn{background:none;border:1px solid #fff;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <div><img src="{% static 'images/logo.jpg' %}" alt="Logo"><b>SDLG-Production MIS</b><small>Soroti District Local Government</small></div>
+  {% if user.is_authenticated %}
+  <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+    <button class="linkbtn" type="submit">Log out</button>
+  </form>
+  {% endif %}
+</header>
+<main>
+{% if messages %}{% for m in messages %}<div class="card" style="border-color:#e0a1a8;margin-bottom:12px">{{ m }}</div>{% endfor %}{% endif %}
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

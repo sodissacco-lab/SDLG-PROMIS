@@ -1,0 +1,24 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  textarea{width:100%;padding:10px;margin:4px 0 14px;border:1px solid #bcc9bc;border-radius:8px;font-size:14px;box-sizing:border-box;font-family:inherit;line-height:1.5}
+  form label{font-size:14px;font-weight:600;color:#14305c;display:block}
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .note{font-size:13px;color:#4a5a4a}
+</style>
+<h2 style="margin-top:0">Narrative report: {{ data.title }}</h2>
+<p><b>{{ data.period }}</b>{% if data.filters %} · {{ data.filters }}{% endif %}</p>
+<p class="note">This draft is written from the verified figures in the system. Read and edit every section before downloading. The statistical tables{% if photo_count %} and {{ photo_count }} photo{{ photo_count|pluralize }}{% endif %} are added to the document automatically. Leave a box empty to leave that section out.</p>
+<form method="post" class="card">{% csrf_token %}
+  {% for f in fields %}
+  <label>{{ f.label }}</label>
+  <textarea name="{{ f.key }}" rows="{{ f.rows }}">{{ f.text }}</textarea>
+  {% endfor %}
+  <div class="actions">
+    <button class="btn" type="submit" formaction="{% url 'narrative_pdf' %}?{{ query }}">Download PDF</button>
+    <button class="btn alt" type="submit" formaction="{% url 'narrative_docx' %}?{{ query }}">Download Word</button>
+  </div>
+</form>
+<p><a href="{% url 'report' %}?{{ query }}">Back to the standard report</a></p>
+{% endblock %}

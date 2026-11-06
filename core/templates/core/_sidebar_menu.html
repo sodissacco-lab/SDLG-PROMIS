@@ -1,0 +1,16 @@
+{% for m in menus %}
+<details {% if m.open %}open{% endif %}>
+  <summary>{{ m.dept.name }}</summary>
+  <a class="sublink {% if request.resolver_match.url_name == 'sector' and request.resolver_match.kwargs.pk == m.dept.pk %}on{% endif %}" href="{% url 'sector' m.dept.pk %}">Overview</a>
+  {% for e in m.entries %}
+    {% if e.children %}
+    <details class="inner" {% if e.open %}open{% endif %}>
+      <summary>{{ e.label }}</summary>
+      {% for c in e.children %}<a class="leaf {% if c.active %}on{% endif %}" href="{{ c.href }}">{{ c.label }}</a>{% endfor %}
+    </details>
+    {% else %}
+    <a class="sublink {% if e.active %}on{% endif %}" href="{{ e.href }}">{{ e.label }}</a>
+    {% endif %}
+  {% endfor %}
+</details>
+{% endfor %}

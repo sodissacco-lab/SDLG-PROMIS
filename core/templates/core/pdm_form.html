@@ -1,0 +1,44 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  select,textarea{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;box-sizing:border-box;font-family:inherit}
+  form label{font-size:13px;color:#4a5a4a;display:block}
+  .errorlist{color:#b00020;margin:0;padding-left:16px;font-size:13px}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .actions{display:flex;gap:10px;margin-top:8px}
+  input[type=checkbox]{width:auto;margin-right:8px}
+</style>
+<h2 style="margin-top:0">{{ title }}</h2>
+<form method="post" class="card">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {{ form.as_div }}
+  <div class="actions">
+    <button class="btn" type="submit">Save</button>
+    <a class="btn alt" href="{{ cancel }}">Cancel</a>
+  </div>
+</form>
+<script>
+(function () {
+  var sub = document.getElementById("id_sub_county");
+  var parish = document.getElementById("id_parish");
+  if (!sub || !parish) return;
+  var selected = parish.value;
+  function load(keep) {
+    parish.innerHTML = '<option value="">---------</option>';
+    if (!sub.value) return;
+    fetch("{% url 'api_parishes' %}?sub_county=" + encodeURIComponent(sub.value))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        d.parishes.forEach(function (p) {
+          var o = document.createElement("option");
+          o.value = p.id; o.textContent = p.name;
+          if (keep && String(p.id) === String(selected)) o.selected = true;
+          parish.appendChild(o);
+        });
+      });
+  }
+  sub.addEventListener("change", function () { selected = ""; load(false); });
+  load(true);
+})();
+</script>
+{% endblock %}

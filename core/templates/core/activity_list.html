@@ -1,0 +1,33 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+  .chip{padding:6px 12px;border-radius:16px;border:1px solid #bcc9bc;background:#fff;color:#1b2b1b;text-decoration:none;font-size:13px}
+  .chip.on{background:#1f5c3a;color:#fff;border-color:#1f5c3a}
+  .badge{font-size:12px;padding:2px 8px;border-radius:10px;background:#e6ece6;white-space:nowrap}
+  .badge.submitted{background:#fff3cd}
+  .badge.approved{background:#d4edda}
+  .badge.returned{background:#f8d7da}
+  a.row{text-decoration:none;color:inherit;gap:10px}
+</style>
+<h2 style="margin-top:0">My activities</h2>
+<div class="chips">
+  <a class="chip {% if not current %}on{% endif %}" href="{% url 'activity_list' %}">All ({{ total }})</a>
+  {% for s in statuses %}
+  <a class="chip {% if current == s.value %}on{% endif %}" href="?status={{ s.value }}">{{ s.label }} ({{ s.count }})</a>
+  {% endfor %}
+</div>
+<div class="card">
+  {% for a in activities %}
+  <a class="row" href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">
+    <span>{{ a.date|date:"d M Y" }} · {{ a.activity_type }}<br>
+      <small>{{ a.department }} · {{ a.sub_county }}{% if a.parish %}, {{ a.parish.name }}{% endif %}</small></span>
+    <span class="badge {{ a.status }}">{{ a.get_status_display }}</span>
+  </a>
+  {% empty %}
+  <p>No activities here yet.</p>
+  {% endfor %}
+</div>
+<p><a class="btn" href="{% url 'activity_new' %}">+ New activity</a></p>
+<p><a href="{% url 'dashboard' %}">Back to dashboard</a></p>
+{% endblock %}

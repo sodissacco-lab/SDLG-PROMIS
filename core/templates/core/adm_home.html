@@ -1,0 +1,17 @@
+{% extends "core/adm_base.html" %}
+{% block adm %}
+<div class="panel">
+  <h2>Administration</h2>
+  <div class="tiles">
+    {% for t in tiles %}
+    <a href="{{ t.url }}" style="text-decoration:none;color:inherit"><div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span></div></a>
+    {% endfor %}
+  </div>
+  <p style="margin-top:14px">
+    <a class="adm-btn alt" href="{% url 'adm_settings' %}">System settings</a>
+    <a class="adm-btn alt" href="{% url 'adm_audit' %}">Audit trail ({{ audit_count }})</a>
+    <a class="adm-btn alt" href="{% url 'adm_backup' %}">Backup</a>
+  </p>
+  <p>Last backup: {% if last_backup %}{{ last_backup.when|date:"d M Y H:i" }}{% else %}none yet{% endif %}</p>
+</div>
+{% endblock %}

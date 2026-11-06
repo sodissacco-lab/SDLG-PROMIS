@@ -1,0 +1,75 @@
+{% extends "core/permit_base.html" %}
+{% block permit %}
+<div class="panel">
+  <div class="pm-head">
+    <h2>{{ heading }}</h2>
+    <div>
+      {% for label, url in issue_links %}<a class="pm-btn" href="{{ url }}">+ {{ label }}</a> {% endfor %}
+    </div>
+  </div>
+
+  <div class="tiles">
+    {% for label, value, color in tiles %}<div class="tile c-{{ color }}"><b>{{ value }}</b><span>{{ label }}</span></div>{% endfor %}
+  </div>
+
+  <p class="pm-tabs" style="margin-top:12px">
+    <a class="pm-btn {% if not filters.type %}{% else %}alt{% endif %}" href="{% url 'permit_list' %}">All</a>
+    <a class="pm-btn {% if filters.type == 'animal' %}{% else %}alt{% endif %}" href="?type=animal">Animals</a>
+    <a class="pm-btn {% if filters.type == 'fish' %}{% else %}alt{% endif %}" href="?type=fish">Fish</a>
+  </p>
+
+  <form class="pm-bar" method="get">
+    <input type="hidden" name="type" value="{{ filters.type }}">
+    <input name="q" value="{{ filters.q }}" placeholder="Search name, number, place, vehicle">
+    <select name="state">
+      <option value="">All statuses</option>
+      <option value="valid" {% if filters.state == 'valid' %}selected{% endif %}>Valid now</option>
+      <option value="expired" {% if filters.state == 'expired' %}selected{% endif %}>Past date, not completed</option>
+      <option value="used" {% if filters.state == 'used' %}selected{% endif %}>Completed</option>
+      <option value="cancelled" {% if filters.state == 'cancelled' %}selected{% endif %}>Cancelled</option>
+    </select>
+    <input type="month" name="month" value="{{ filters.month }}">
+    <button class="pm-btn alt" type="submit">Filter</button>
+    <a class="pm-btn alt" href="?{{ keep }}&export=csv">Download Excel (CSV)</a>
+  </form>
+
+  <div class="tbl">
+    <table>
+      <tr><th>Reference</th><th>Type</th><th>Name</th><th>What</th><th>From</th><th>To</th><th>Issued</th><th>Valid until</th><th>Status</th><th></th></tr>
+      {% for p in page %}
+      <tr>
+        <td><a href="{% url 'permit_detail' p.pk %}">{{ p.code }}</a>{% if p.book_number %}<br><small>No. {{ p.book_number }}</small>{% endif %}</td>
+        <td>{{ p.get_permit_type_display }}</td>
+        <td>{{ p.holder_name }}</td>
+        <td>{{ p.what }}</td>
+        <td>{{ p.from_place }}</td>
+        <td>{{ p.destination }}</td>
+        <td>{{ p.issue_date|date:"d M Y" }}</td>
+        <td>{{ p.valid_until|date:"d M Y" }}</td>
+        <td><span class="pm-state {{ p.state }}">{{ p.state }}</span></td>
+        <td><a href="{% url 'permit_pdf' p.pk %}" target="_blank">Print</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="10">No permits yet.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="pm-pager">
+    {% if page.has_previous %}<a href="?{{ keep }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?{{ keep }}&page={{ page.next_page_number }}">Next</a>{% endif %}
+  </div>
+
+  <div class="pm-two">
+    <div><h3>By type</h3><div class="tbl"><table>
+      {% for label, n in by_type %}<tr><td>{{ label }}</td><td>{{ n }}</td></tr>{% empty %}<tr><td>None</td></tr>{% endfor %}
+    </table></div></div>
+    <div><h3>Top destinations</h3><div class="tbl"><table>
+      {% for label, n in by_dest %}<tr><td>{{ label }}</td><td>{{ n }}</td></tr>{% empty %}<tr><td>None</td></tr>{% endfor %}
+    </table></div></div>
+    <div><h3>Animals: by sub-county of origin</h3><div class="tbl"><table>
+      {% for label, n in by_sub %}<tr><td>{{ label }}</td><td>{{ n }}</td></tr>{% empty %}<tr><td>None</td></tr>{% endfor %}
+    </table></div></div>
+  </div>
+</div>
+{% endblock %}

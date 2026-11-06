@@ -1,0 +1,17 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>a.row{text-decoration:none;color:inherit;gap:10px}</style>
+<h2 style="margin-top:0">Awaiting review</h2>
+<div class="card">
+  {% for a in activities %}
+  <a class="row" href="{% url 'activity_detail' a.pk %}">
+    <span>{{ a.date|date:"d M Y" }} · {{ a.activity_type }}<br>
+      <small>{{ a.officer.get_full_name|default:a.officer.username }} · {{ a.department }} · {{ a.sub_county }}</small></span>
+    <span>Review</span>
+  </a>
+  {% empty %}
+  <p>Nothing is waiting for review.</p>
+  {% endfor %}
+</div>
+<p><a href="{% url 'dashboard' %}">Back to dashboard</a></p>
+{% endblock %}

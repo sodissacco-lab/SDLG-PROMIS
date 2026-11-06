@@ -1,0 +1,112 @@
+{% extends "core/district.html" %}
+{% block content %}
+<style>
+  .badge.draft{background:#e6ece6}
+  .badge.submitted{background:#fff3cd}
+  .badge.approved{background:#d4edda}
+  .badge.returned{background:#f8d7da}
+  a.tile{display:block;text-decoration:none}
+  .alert{background:#fdf1f2;border:1px solid #e0a1a8;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+</style>
+<h1>My dashboard</h1>
+<p class="sub">Your own submitted and approved activities, and the work waiting for you</p>
+<div class="nav">
+  <a href="?{{ prev_query }}">&larr; Previous</a>
+  <b>{{ period }}</b>
+  <a href="?{{ next_query }}">Next &rarr;</a>
+</div>
+
+{% if returned_count %}
+<div class="alert"><b>{{ returned_count }} activit{{ returned_count|pluralize:"y,ies" }} returned for correction.</b> <a href="{{ returned_url }}">Fix and resubmit</a></div>
+{% endif %}
+
+<div class="tiles">
+  {% for t in key_tiles %}
+  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  {% endfor %}
+</div>
+<div class="tiles">
+  {% for t in action_tiles %}
+  <a class="tile c-{{ t.color }}" href="{{ t.href }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{{ t.sub }}</small></a>
+  {% endfor %}
+</div>
+<div class="tiles">
+  {% for t in indicator_tiles %}
+  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  {% endfor %}
+</div>
+
+<div class="panels">
+  <div class="panel">
+    <h2>My activities by category</h2>
+    <div class="donutwrap">
+      <div class="donut" style="background:{{ donut_gradient }}"><div class="hole"><small>Total</small><b>{{ donut_total }}</b><small>activities</small></div></div>
+      <div class="legend">
+        {% for r in by_department %}<div><span class="dot" style="background:{{ r.color }}"></span>{{ r.name }} &nbsp;{{ r.activities }} ({{ r.pct }}%)</div>
+        {% empty %}<div>Nothing recorded this month.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>My activities by sub-county</h2>
+    {% if by_sub_county %}
+    <div class="vbars">
+      {% for r in by_sub_county %}
+      <div class="vcol"><div class="vwrap"><div class="vbar" style="height:{{ r.width }}%"></div></div><div class="vlab">{{ r.name }}<b>{{ r.activities }}</b></div></div>
+      {% endfor %}
+    </div>
+    {% else %}<p>Nothing recorded this month.</p>{% endif %}
+  </div>
+
+  <div class="panel">
+    <h2>My activity trend</h2>
+    <svg viewBox="0 0 300 140" class="line">
+      <line x1="10" y1="110" x2="295" y2="110" stroke="#dde5dd"/>
+      <polyline fill="none" stroke="#1e6fd9" stroke-width="2" points="{{ line_activities }}"/>
+      <polyline fill="none" stroke="#2e9b4f" stroke-width="2" points="{{ line_extension }}"/>
+      {% for t in trend %}
+      <circle cx="{{ t.x }}" cy="{{ t.ya }}" r="3" fill="#1e6fd9"/>
+      <circle cx="{{ t.x }}" cy="{{ t.ye }}" r="3" fill="#2e9b4f"/>
+      <text x="{{ t.x }}" y="130" text-anchor="middle" font-size="9" fill="#5a6b5a">{{ t.label }}</text>
+      {% endfor %}
+    </svg>
+    <div class="leg2"><span><span class="dot" style="background:#1e6fd9"></span> Total activities</span><span><span class="dot" style="background:#2e9b4f"></span> Extension visits</span></div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <h2>My recent activities</h2>
+    <div class="tbl">
+      <table>
+        <tr><th>Date</th><th>Activity</th><th>Category</th><th>Sub-county</th><th>Parish</th><th>Status</th></tr>
+        {% for a in recent %}
+        <tr>
+          <td>{{ a.date|date:"d M Y" }}</td>
+          <td><a href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">{{ a.activity_type }}</a></td>
+          <td><span class="badge {{ a.department.name|lower }}">{{ a.department }}</span></td>
+          <td>{{ a.sub_county|default:"-" }}</td>
+          <td>{{ a.parish.name|default:"-" }}</td>
+          <td><span class="badge {{ a.status }}">{{ a.get_status_display }}</span></td>
+        </tr>
+        {% empty %}<tr><td colspan="6">You have not recorded any activities yet.</td></tr>{% endfor %}
+      </table>
+    </div>
+    <p style="margin:10px 0 0"><a href="{% url 'activity_list' %}">View all my activities</a></p>
+  </div>
+
+  <div class="panel">
+    <h2>Quick actions</h2>
+    <div class="quick">
+      {% for d in departments %}
+      <a class="c-{% cycle 'green' 'blue' 'orange' 'pink' 'purple' 'teal' %}" href="{% url 'activity_new' %}?department={{ d.pk }}">Add {{ d.name }} activity</a>
+      {% endfor %}
+      <a class="c-blue" href="{% url 'activity_list' %}">My activities</a>
+      <a class="c-purple" href="{% url 'report' %}">Generate report</a>
+    </div>
+  </div>
+</div>
+
+<div class="welcome"><span><b>Record once, report everywhere.</b> Each activity you enter feeds your totals, the sub-county and monthly reports, and the district dashboard.</span><i>"Integrated Data for Improved Service Delivery"</i></div>
+{% endblock %}

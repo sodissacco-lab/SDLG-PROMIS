@@ -1,0 +1,163 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  select,textarea{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;box-sizing:border-box;font-family:inherit}
+  form label{font-size:13px;color:#4a5a4a;display:block}
+  .errorlist{color:#b00020;margin:0;padding-left:16px;font-size:13px}
+  .card{margin-bottom:12px}
+  .card h2{margin-top:0}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .actions{display:flex;gap:10px}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .total{font-size:14px;margin:0 0 8px}
+  .gps{font-size:13px;color:#4a5a4a;margin-left:8px}
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:8px 0}
+  .thumbs img{width:100%;border-radius:8px;display:block}
+  .thumbs button{width:100%;margin-top:4px;font-size:12px;padding:4px;border:1px solid #e0a1a8;background:#fdf1f2;border-radius:6px;cursor:pointer}
+</style>
+
+<h2 style="margin:0 0 12px">{{ title|default:"New activity" }}</h2>
+{% if activity and activity.status == 'returned' and activity.review_comment %}
+<div class="card" style="border-color:#e0a1a8;background:#fdf1f2"><b>Returned for correction</b><p>{{ activity.review_comment|linebreaksbr }}</p></div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {{ form.latitude }}{{ form.longitude }}
+
+  <div class="card">
+    <h2>1. What was done</h2>
+    {{ form.department.as_field_group }}
+    {{ form.activity_type.as_field_group }}
+    {{ form.date.as_field_group }}
+    <div class="two">
+      {{ form.start_time.as_field_group }}
+      {{ form.end_time.as_field_group }}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Where</h2>
+    {{ form.sub_county.as_field_group }}
+    {{ form.parish.as_field_group }}
+    {{ form.village.as_field_group }}{{ form.landing_site.as_field_group }}{{ form.farmer.as_field_group }}{{ form.pond.as_field_group }}
+    <button type="button" class="btn alt" id="gps-btn">Capture my location</button>
+    <span class="gps" id="gps-msg"></span>
+  </div>
+
+  <div class="card">
+    <h2>3. Who was reached</h2>
+    <div class="two">
+      {{ form.male.as_field_group }}
+      {{ form.female.as_field_group }}
+    </div>
+    <p class="total">Total reached: <b id="total">0</b></p>
+    <div class="two">
+      {{ form.youth.as_field_group }}
+      {{ form.pwd.as_field_group }}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>4. Details</h2>
+    {{ form.description.as_field_group }}
+    {{ form.findings.as_field_group }}
+    {{ form.action_taken.as_field_group }}
+    {{ form.follow_up.as_field_group }}
+  </div>
+
+  <div class="card">
+    <h2>5. Photos (evidence)</h2>
+    <p class="gps" style="margin:0 0 8px">Up to 6 photos. Each is stamped with the activity, date, officer, location and GPS.</p>
+    {% if activity and activity.photos.all %}
+    <div class="thumbs">
+      {% for p in activity.photos.all %}
+      <div>
+        <img src="{% url 'photo_file' p.pk %}" alt="Photo {{ forloop.counter }}">
+        <button type="submit" formaction="{% url 'photo_delete' p.pk %}" formnovalidate>Remove</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <input type="file" name="photos" accept="image/*" multiple>
+  </div>
+
+  <div class="actions">
+    <button class="btn alt" type="submit" name="action" value="draft">Save draft</button>
+    <button class="btn" type="submit" name="action" value="submit">Submit</button>
+  </div>
+</form>
+<p><a href="{% url 'dashboard' %}">Back to dashboard</a></p>
+
+{{ types_by_department|json_script:"types-data" }}
+<script>
+(function () {
+  var types = JSON.parse(document.getElementById("types-data").textContent);
+  var dept = document.getElementById("id_department");
+  var type = document.getElementById("id_activity_type");
+  function loadTypes() {
+    var current = type.value;
+    type.innerHTML = '<option value="">---------</option>';
+    (types[dept.value] || []).forEach(function (t) {
+      var o = document.createElement("option");
+      o.value = t; o.textContent = t;
+      if (t === current) o.selected = true;
+      type.appendChild(o);
+    });
+  }
+  dept.addEventListener("change", loadTypes);
+  loadTypes();
+
+  var sub = document.getElementById("id_sub_county");
+  var parish = document.getElementById("id_parish");
+  var selectedParish = parish.value;
+  function loadParishes(keep) {
+    parish.innerHTML = '<option value="">---------</option>';
+    if (!sub.value) return;
+    fetch("{% url 'api_parishes' %}?sub_county=" + encodeURIComponent(sub.value))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        d.parishes.forEach(function (p) {
+          var o = document.createElement("option");
+          o.value = p.id; o.textContent = p.name;
+          if (keep && String(p.id) === String(selectedParish)) o.selected = true;
+          parish.appendChild(o);
+        });
+      });
+  }
+  sub.addEventListener("change", function () { selectedParish = ""; loadParishes(false); });
+  loadParishes(true);
+
+  var male = document.getElementById("id_male");
+  var female = document.getElementById("id_female");
+  var total = document.getElementById("total");
+  function updateTotal() {
+    total.textContent = (parseInt(male.value) || 0) + (parseInt(female.value) || 0);
+  }
+  male.addEventListener("input", updateTotal);
+  female.addEventListener("input", updateTotal);
+  updateTotal();
+
+  var lat = document.getElementById("id_latitude");
+  var lon = document.getElementById("id_longitude");
+  var msg = document.getElementById("gps-msg");
+  function capture() {
+    if (!navigator.geolocation) { msg.textContent = "Location not available on this device."; return; }
+    msg.textContent = "Getting location...";
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      lat.value = pos.coords.latitude.toFixed(6);
+      lon.value = pos.coords.longitude.toFixed(6);
+      msg.textContent = "Location captured (accuracy about " + Math.round(pos.coords.accuracy) + " m).";
+    }, function () {
+      msg.textContent = "Could not get location. Allow location access and tap the button again.";
+    }, { enableHighAccuracy: true, timeout: 20000 });
+  }
+  document.getElementById("gps-btn").addEventListener("click", capture); (function(){var q=new URLSearchParams(location.search);["landing_site","farmer","pond"].forEach(function(n){var el=document.getElementById("id_"+n);if(el&&q.get(n)&&!el.value){el.value=q.get(n);}});})();
+  if (lat.value && lon.value) {
+    msg.textContent = "Location saved: " + lat.value + ", " + lon.value;
+  } else {
+    capture();
+  }
+})();
+</script>
+{% endblock %}

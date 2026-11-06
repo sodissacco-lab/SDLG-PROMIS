@@ -1,0 +1,63 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  select{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a;background:#f5f8f5}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .filterbox{max-width:900px}
+  .filterbox label{font-size:13px;color:#4a5a4a;display:block}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+</style>
+<h2 style="margin-top:0">PDM register{% if group %}: {{ group.name }}{% endif %}</h2>
+<form method="get" class="card filterbox">
+  <div class="filters">
+    <div><label>Name or phone</label><input type="text" name="q" value="{{ q }}"></div>
+    <div><label>Sub-county</label>
+      <select name="sub_county">
+        <option value="">All</option>
+        {% for s in sub_counties %}<option value="{{ s.pk }}" {% if s.pk == sub_county_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></div>
+    <div><label>Loan status</label>
+      <select name="loan">
+        <option value="">All</option>
+        {% for code, label in loans %}<option value="{{ code }}" {% if code == loan %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+  </div>
+  <button class="btn" type="submit">Search</button>
+</form>
+
+<div class="dl">
+  {% if can_add %}<a class="btn" href="{% url 'pdm_new' %}">+ Register beneficiary</a>{% endif %}
+  <a class="btn alt" href="{% url 'pdm_groups' %}">Groups</a>
+  <a class="btn alt" href="{% url 'pdm_summary' %}">Summary report</a>
+</div>
+<p><b>{{ total_count }}</b> beneficiaries · <b>UGX {{ total_amount|floatformat:"0g" }}</b> received</p>
+
+<div class="card" style="overflow-x:auto;max-width:none">
+  <table>
+    <tr><th>Name</th><th>Sex</th><th>Group</th><th>Sub-county</th><th>Parish</th><th>Enterprise</th><th>Amount (UGX)</th><th>Loan</th></tr>
+    {% for b in page %}
+    <tr>
+      <td><a href="{% url 'pdm_detail' b.pk %}">{{ b.name }}</a></td>
+      <td>{{ b.sex }}</td>
+      <td>{{ b.group.name|default:"-" }}</td>
+      <td>{{ b.sub_county }}</td>
+      <td>{{ b.parish.name }}</td>
+      <td>{{ b.enterprise|default:"-" }}</td>
+      <td>{{ b.amount_received|floatformat:"0g" }}</td>
+      <td>{{ b.get_loan_status_display }}</td>
+    </tr>
+    {% empty %}<tr><td colspan="8">No beneficiaries found.</td></tr>{% endfor %}
+  </table>
+</div>
+<p>
+  {% if page.has_previous %}<a href="?{{ params }}&page={{ page.previous_page_number }}">&larr; Previous</a>{% endif %}
+  Page {{ page.number }} of {{ page.paginator.num_pages }}
+  {% if page.has_next %}<a href="?{{ params }}&page={{ page.next_page_number }}">Next &rarr;</a>{% endif %}
+</p>
+</div>
+{% endblock %}

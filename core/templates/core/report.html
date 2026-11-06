@@ -1,0 +1,95 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<div class="wide">
+<style>
+  select{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:6px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  th{color:#4a5a4a}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .dl{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .filterbox label{font-size:13px;color:#4a5a4a;display:block}
+  .filterbox{max-width:900px}
+</style>
+
+<h2 style="margin-top:0">Reports</h2>
+<form method="get" class="card filterbox">
+  <div class="filters">
+    <div><label>Report type</label>
+      <select name="type" id="rtype">
+        {% for value, label in kinds %}<option value="{{ value }}" {% if f.kind == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+
+    <div data-for="daily weekly"><label>Date</label><input type="date" name="day" value="{{ f.day }}"></div>
+
+    <div data-for="monthly"><label>Month</label>
+      <select name="month">
+        {% for num, name in months %}<option value="{{ num }}" {% if num == f.month %}selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select></div>
+    <div data-for="monthly"><label>Year</label><input type="number" name="year" value="{{ f.year }}"></div>
+
+    <div data-for="quarterly"><label>Quarter</label>
+      <select name="quarter">
+        {% for num, name in quarters %}<option value="{{ num }}" {% if num == f.quarter %}selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select></div>
+    <div data-for="quarterly"><label>Financial year (starting July)</label><input type="number" name="fy" value="{{ f.fy }}"></div>
+
+    <div data-for="annual"><label>Financial year (starting July)</label><input type="number" name="fy" value="{{ f.fy }}"></div>
+
+    <div><label>Department</label>
+      <select name="department">
+        <option value="">All departments</option>
+        {% for d in departments %}<option value="{{ d.pk }}" {% if d.pk == department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+      </select></div>
+    <div><label>Sub-county</label>
+      <select name="sub_county">
+        <option value="">All sub-counties</option>
+        {% for s in sub_counties %}<option value="{{ s.pk }}" {% if s.pk == sub_county_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select></div>
+  </div>
+  <button class="btn" type="submit">Show report</button>
+</form>
+
+<p><b>{{ data.title }}</b><br>{{ data.period }}{% if data.filters %} · {{ data.filters }}{% endif %}<br>
+<small>Only approved activities are counted. Photos included in downloads: {{ data.photos|length }}.</small></p>
+
+<div class="dl">
+  <a class="btn" href="{% url 'report_pdf' %}?{{ query }}">Download PDF</a>
+  <a class="btn alt" href="{% url 'report_docx' %}?{{ query }}">Download Word</a><a class="btn" href="{% url 'narrative' %}?{{ query }}">Narrative report</a>
+  {% if can_pack %}
+  <a class="btn" href="{% url 'pack_pdf' %}?{{ query }}">Sub-county pack (PDF)</a>
+  <a class="btn alt" href="{% url 'pack_docx' %}?{{ query }}">Sub-county pack (Word)</a>
+  {% endif %}
+</div>
+
+{% for t in tables %}
+<h2>{{ t.title }}</h2>
+<div class="card" style="overflow-x:auto">
+  {% if t.rows %}
+  <table>
+    <tr>{% for h in t.header %}<th>{{ h }}</th>{% endfor %}</tr>
+    {% for row in t.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+  </table>
+  {% else %}
+  <p>No records.</p>
+  {% endif %}
+</div>
+{% endfor %}
+</div>
+
+<script>
+(function () {
+  var type = document.getElementById("rtype");
+  function sync() {
+    document.querySelectorAll("[data-for]").forEach(function (g) {
+      var show = g.getAttribute("data-for").split(" ").indexOf(type.value) !== -1;
+      g.style.display = show ? "" : "none";
+      g.querySelectorAll("input,select").forEach(function (el) { el.disabled = !show; });
+    });
+  }
+  type.addEventListener("change", sync);
+  sync();
+})();
+</script>
+{% endblock %}

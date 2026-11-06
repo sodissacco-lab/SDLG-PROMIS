@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% block extrastyle %}{{ block.super }}
+<style>
+:root {
+  --primary: #0f2a57;
+  --secondary: #1c3d77;
+  --breadcrumbs-bg: #1c3d77;
+  --link-fg: #1e6fd9;
+  --button-bg: #1f5c3a;
+  --button-hover-bg: #17482d;
+  --default-button-bg: #1e6fd9;
+  --default-button-hover-bg: #0f2a57;
+}
+</style>
+{% endblock %}
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">SDLG-Production MIS</a>
+<a href="{% url 'dashboard' %}" style="margin-left:20px;font-size:13px;color:#fff">&larr; Back to the system</a></div>
+{% endblock %}

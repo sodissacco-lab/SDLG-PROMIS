@@ -1,0 +1,65 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  textarea{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px;box-sizing:border-box;font-family:inherit}
+  .actions{display:flex;gap:10px}
+  .btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+  .gallery img{width:100%;border-radius:8px;display:block}
+</style>
+<div class="card">
+  <h2 style="margin-top:0">{{ activity.activity_type }}</h2>
+  <div class="row"><span>Status</span><b>{{ activity.get_status_display }}</b></div>
+  <div class="row"><span>Department</span><span>{{ activity.department }}</span></div>
+  <div class="row"><span>Officer</span><span>{{ activity.officer.get_full_name|default:activity.officer.username }}</span></div>
+  <div class="row"><span>Date</span><span>{{ activity.date|date:"d M Y" }}</span></div>
+  {% if activity.start_time %}<div class="row"><span>Time</span><span>{{ activity.start_time|time:"H:i" }}{% if activity.end_time %} to {{ activity.end_time|time:"H:i" }}{% endif %}</span></div>{% endif %}
+  <div class="row"><span>Location</span><span>{{ activity.sub_county }}{% if activity.parish %}, {{ activity.parish.name }}{% endif %}{% if activity.village %}, {{ activity.village }}{% endif %}</span></div>
+  {% if activity.latitude and activity.longitude %}
+  <div class="row"><span>GPS</span><span>{{ activity.latitude }}, {{ activity.longitude }} · <a href="https://www.openstreetmap.org/?mlat={{ activity.latitude }}&amp;mlon={{ activity.longitude }}#map=16/{{ activity.latitude }}/{{ activity.longitude }}" target="_blank" rel="noopener">View on map</a></span></div>
+  {% endif %}
+  <div class="row"><span>Men reached</span><span>{{ activity.male }}</span></div>
+  <div class="row"><span>Women reached</span><span>{{ activity.female }}</span></div>
+  <div class="row"><span>Total reached</span><b>{{ activity.total_beneficiaries }}</b></div>
+  <div class="row"><span>Youth</span><span>{{ activity.youth }}</span></div>
+  <div class="row"><span>Persons with disability</span><span>{{ activity.pwd }}</span></div>
+</div>
+{% load link_tags %}{% activity_links activity %}{% if activity.description %}<div class="card" style="margin-top:12px"><span>Description</span><p>{{ activity.description|linebreaksbr }}</p></div>{% endif %}
+{% if activity.findings %}<div class="card" style="margin-top:12px"><span>Findings</span><p>{{ activity.findings|linebreaksbr }}</p></div>{% endif %}
+{% if activity.action_taken %}<div class="card" style="margin-top:12px"><span>Action taken</span><p>{{ activity.action_taken|linebreaksbr }}</p></div>{% endif %}
+{% if activity.follow_up %}<div class="card" style="margin-top:12px"><span>Follow-up required</span><p>{{ activity.follow_up|linebreaksbr }}</p></div>{% endif %}
+
+{% if activity.photos.all %}
+<div class="card" style="margin-top:12px">
+  <span>Photos ({{ activity.photos.count }})</span>
+  <div class="gallery">
+    {% for p in activity.photos.all %}
+    <a href="{% url 'photo_file' p.pk %}" target="_blank"><img src="{% url 'photo_file' p.pk %}" alt="Photo {{ forloop.counter }}"></a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if activity.status == 'approved' or activity.status == 'returned' %}
+<div class="card" style="margin-top:12px">
+  <span>{{ activity.get_status_display }}{% if activity.reviewed_by %} by {{ activity.reviewed_by.get_full_name|default:activity.reviewed_by.username }}{% endif %}{% if activity.reviewed_at %} on {{ activity.reviewed_at|date:"d M Y H:i" }}{% endif %}</span>
+  {% if activity.review_comment %}<p>{{ activity.review_comment|linebreaksbr }}</p>{% endif %}
+</div>
+{% endif %}
+
+{% if can_review %}
+<div class="card" style="margin-top:12px">
+  <h2 style="margin-top:0">Review</h2>
+  <form method="post" action="{% url 'activity_review' activity.pk %}">{% csrf_token %}
+    <label>Comment (required when returning)</label>
+    <textarea name="comment" rows="3"></textarea>
+    <div class="actions">
+      <button class="btn alt" type="submit" name="decision" value="return">Return for correction</button>
+      <button class="btn" type="submit" name="decision" value="approve">Approve</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<p><a href="{% url 'activity_list' %}">Back to my activities</a></p>
+{% endblock %}

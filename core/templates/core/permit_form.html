@@ -1,0 +1,52 @@
+{% extends "core/permit_base.html" %}
+{% block permit %}
+<div class="panel pm-form">
+  <h2>{{ title }}</h2>
+  <form method="post" id="permit-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="err">{{ form.non_field_errors }}</div>{% endif %}
+    {% for heading, fields in form.sections %}
+    <fieldset>
+      <legend>{{ heading }}</legend>
+      <div class="pm-grid">
+        {% for f in fields %}
+        <div class="row {% if f.field.widget.input_type == 'checkbox' %}chk{% endif %}" {% if f.field.widget.input_type == 'checkbox' or f.name == 'inspection_notes' or f.name == 'description' %}style="grid-column:1/-1"{% endif %}>
+          {% if f.field.widget.input_type == 'checkbox' %}
+            {{ f }} <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+          {% else %}
+            <label for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} *{% endif %}</label>
+            {{ f }}
+          {% endif %}
+          {% if f.help_text %}<div class="help">{{ f.help_text }}</div>{% endif %}
+          {% for e in f.errors %}<div class="err">{{ e }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endfor %}
+    <p class="help">The permit is only valid once the officer has signed it and, where required, stamped it. This page records it in the register and prints it.</p>
+    <button class="pm-btn" type="submit">Save permit</button>
+    <a class="pm-btn alt" href="{{ back }}">Cancel</a>
+  </form>
+</div>
+{{ landing_lakes|json_script:"lake-data" }}
+<script>
+(function () {
+  var lakes = {};
+  try { lakes = JSON.parse(document.getElementById('lake-data').textContent) || {}; } catch (e) {}
+  var site = document.getElementById('id_origin_landing_site'), lake = document.getElementById('id_origin_lake');
+  if (site && lake) {
+    site.addEventListener('change', function () {
+      if (!lake.value && lakes[site.value]) lake.value = lakes[site.value];
+    });
+  }
+  var sub = document.getElementById('id_origin_sub_county'), from = document.getElementById('id_from_place');
+  if (sub && from) {
+    sub.addEventListener('change', function () {
+      var t = sub.options[sub.selectedIndex];
+      if (!from.value && t && t.value) from.value = t.textContent + ' Sub-county, Soroti District';
+    });
+  }
+})();
+</script>
+{% endblock %}

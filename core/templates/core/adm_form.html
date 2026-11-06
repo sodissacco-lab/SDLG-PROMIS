@@ -1,0 +1,20 @@
+{% extends "core/adm_base.html" %}
+{% block adm %}
+<div class="panel adm-form">
+  <h2>{{ title }}</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for f in form %}
+    <div class="row">
+      <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+      {{ f }}
+      {% if f.help_text %}<div class="help">{{ f.help_text }}</div>{% endif %}
+      {% for e in f.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+    <button class="adm-btn" type="submit">Save</button>
+    <a class="adm-btn alt" href="{{ back_url }}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

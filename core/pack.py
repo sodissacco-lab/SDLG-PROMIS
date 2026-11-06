@@ -1,0 +1,136 @@
+import io
+from xml.sax.saxutils import escape
+
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import (
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
+from .exports import HEADINGS, SIGNATURES, build_tables
+
+
+def _section_tables(data):
+    return [t for t in build_tables(data) if t["title"] != "By sub-county"] + data.get("register_tables", []) + data.get("register_tables", [])
+
+
+def _pdf_table(t, cell, width):
+    count = len(t["header"])
+    weights = t.get("weights") or [1.0 / count] * count
+    rows = [[Paragraph("<b>%s</b>" % escape(str(h)), cell) for h in t["header"]]]
+    for r in t["rows"]:
+        rows.append([Paragraph(escape(str(v)), cell) for v in r])
+    tbl = Table(rows, colWidths=[width * w for w in weights], repeatRows=1)
+    tbl.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e6ece6")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+    )
+    return tbl
+
+
+def make_pack_pdf(title, period_label, sections, empty):
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36
+    )
+    styles = getSampleStyleSheet()
+    center = ParagraphStyle(
+        "center", parent=styles["Normal"], alignment=1, fontSize=12, leading=15
+    )
+    cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8, leading=10)
+    width = A4[0] - 72
+    story = []
+    for h in HEADINGS[:2] + [title]:
+        story.append(Paragraph("<b>%s</b>" % escape(h), center))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("Reporting period: " + escape(period_label), styles["Normal"]))
+    for i, (heading, data) in enumerate(sections):
+        if i:
+            story.append(PageBreak())
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("<b>%s</b>" % escape(heading), styles["Heading2"]))
+        for t in _section_tables(data):
+            story.append(Spacer(1, 8))
+            story.append(Paragraph("<b>%s</b>" % escape(t["title"]), styles["Heading3"]))
+            if not t["rows"]:
+                story.append(Paragraph("No records.", styles["Normal"]))
+                continue
+            story.append(_pdf_table(t, cell, width))
+    if empty:
+        story.append(Spacer(1, 14))
+        story.append(
+            Paragraph(
+                "No approved activities in this period: " + escape(", ".join(empty)),
+                styles["Normal"],
+            )
+        )
+    story.append(Spacer(1, 24))
+    for label in SIGNATURES:
+        story.append(
+            Paragraph(
+                "%s: ______________________ &nbsp;&nbsp; Date: ____________" % label,
+                styles["Normal"],
+            )
+        )
+        story.append(Spacer(1, 14))
+    doc.build(story)
+    return buf.getvalue()
+
+
+def _docx_table(doc, t):
+    table = doc.add_table(rows=1, cols=len(t["header"]))
+    table.style = "Table Grid"
+    for i, h in enumerate(t["header"]):
+        cell = table.rows[0].cells[i]
+        cell.text = h
+        for para in cell.paragraphs:
+            for run in para.runs:
+                run.bold = True
+    for row in t["rows"]:
+        cells = table.add_row().cells
+        for i, value in enumerate(row):
+            cells[i].text = str(value)
+
+
+def make_pack_docx(title, period_label, sections, empty):
+    doc = Document()
+    for text, size in zip(HEADINGS[:2] + [title], (14, 12, 14)):
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run(text)
+        run.bold = True
+        run.font.size = Pt(size)
+    doc.add_paragraph("Reporting period: " + period_label)
+    for i, (heading, data) in enumerate(sections):
+        if i:
+            doc.add_page_break()
+        doc.add_heading(heading, level=1)
+        for t in _section_tables(data):
+            doc.add_heading(t["title"], level=2)
+            if not t["rows"]:
+                doc.add_paragraph("No records.")
+                continue
+            _docx_table(doc, t)
+    if empty:
+        doc.add_paragraph()
+        doc.add_paragraph("No approved activities in this period: " + ", ".join(empty))
+    doc.add_paragraph()
+    for label in SIGNATURES:
+        doc.add_paragraph("%s: ______________________    Date: ____________" % label)
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
