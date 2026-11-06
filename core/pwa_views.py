@@ -14,6 +14,18 @@ from django.views.decorators.http import require_POST
 from .models import Activity, Department, Parish, SubCounty
 from .pwa_models import OfflineSync
 
+
+def user_obj(u, attr, model):
+    """The user's department / sub-county as a model object, whether the user
+    record stores it as a link or as plain text (matched by name)."""
+    val = getattr(u, attr, None)
+    if not val:
+        return None
+    if hasattr(val, "pk"):
+        return val
+    return model.objects.filter(name__iexact=str(val).strip()).first()
+
+
 try:
     from .photo_models import ActivityPhoto
 except Exception:  # photos not installed
@@ -62,9 +74,9 @@ def manifest(request):
 
 
 SERVICE_WORKER = """
-const VERSION = 'promis-v1';
+const VERSION = 'promis-v2';
 const SHELL = ['/offline-app/', '/offline-app/data/', '/manifest.webmanifest',
-               '%(i192)s', '%(i512)s'];
+               '%(i192)s', '%(i512)s', '%(logo)s'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) {
@@ -116,6 +128,7 @@ def service_worker(request):
     body = SERVICE_WORKER % {
         "i192": static("core/pwa/icon-192.png"),
         "i512": static("core/pwa/icon-512.png"),
+        "logo": static("core/logo.jpg"),
     }
     resp = HttpResponse(body, content_type="application/javascript")
     resp["Service-Worker-Allowed"] = "/"
@@ -135,8 +148,8 @@ def lookup_data(u):
     subs = list(SubCounty.objects.order_by("name").values("id", "name"))
     parishes = list(Parish.objects.order_by("name").values("id", "name", "sub_county_id"))
     types = {name: list(items) for name, items in BY_DEPARTMENT.items()}
-    my_dept = getattr(getattr(u, "department", None), "id", None)
-    my_sub = getattr(getattr(u, "sub_county", None), "id", None)
+    my_dept = getattr(user_obj(u, "department", Department), "id", None)
+    my_sub = getattr(user_obj(u, "sub_county", SubCounty), "id", None)
     return {
         "user": u.get_full_name() or u.get_username(),
         "my_department": my_dept,
