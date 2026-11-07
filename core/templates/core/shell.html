@@ -16,6 +16,7 @@ body{font-family:system-ui,sans-serif;margin:0;background:#f1f4f1;color:#1b2b1b}
 .tag{font-size:13px;font-style:italic;color:#4a5a4a}
 .who{display:flex;align-items:center;gap:12px;font-size:13px}
 .who button{background:#fff;border:1px solid #bcc9bc;border-radius:6px;padding:4px 10px;cursor:pointer}
+.menubtn{display:none;background:#0f2a57;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:15px;font-weight:600;cursor:pointer}
 .layout{display:flex;min-height:calc(100vh - 66px)}
 .side{width:240px;background:#0f2a57;color:#fff;padding:12px 8px;flex-shrink:0}
 .side a{display:block;color:#dbe5f7;text-decoration:none;padding:9px 12px;border-radius:8px;font-size:14px;margin-bottom:2px}
@@ -44,14 +45,30 @@ input{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-
 input[type=checkbox]{width:auto;margin-right:8px}
 @media (max-width:820px){
   .layout{flex-direction:column}
-  .side{width:100%;max-height:55vh;overflow-y:auto}
-  .tag{display:none}
+  .menubtn{display:inline-block}
+  .side{display:none;width:100%;max-height:70vh;overflow-y:auto}
+  .side.open{display:block}
+  .tag,.who span{display:none}
+  .top{padding:6px 10px;gap:8px}
+  .brand img{height:36px}
+  .brand b{font-size:14px}
+  .brand span{font-size:12px}
+  .content{padding:12px}
+  .tiles{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .tile{padding:10px!important}
+  .tile b{font-size:24px!important}
+  .tile span{font-size:13px!important;margin:1px 0 3px!important}
+  .tile small{font-size:11px!important}
+  .split>*,.panels>*,.panel{min-width:0}
+  .quick{grid-template-columns:1fr 1fr!important}
+  h1{font-size:20px!important}
 }
 </style>
 {% block extra_head %}{% endblock %}
 </head>
 <body>
 <header class="top">
+  <button class="menubtn" id="menubtn" type="button" aria-expanded="false" aria-controls="sidenav">&#9776; Menu</button>
   <div class="brand">
     <img src="{% static 'core/logo.jpg' %}" alt="" onerror="this.style.display='none'">
     <div><b>Soroti District Local Government</b><span>Production Department MIS</span></div>
@@ -65,7 +82,7 @@ input[type=checkbox]{width:auto;margin-right:8px}
 </header>
 <div class="layout">
   {% with u=request.resolver_match.url_name %}
-  <nav class="side">
+  <nav class="side" id="sidenav">
     <a class="{% if u == 'dashboard' %}on{% endif %}" href="{% url 'dashboard' %}">Home</a>
     {% if nav_district %}<a class="{% if u == 'district' %}on{% endif %}" href="{% url 'district' %}">District dashboard</a>{% endif %}
     {% if nav_subcounties %}<a class="{% if u == 'subcounty_list' or u == 'subcounty' %}on{% endif %}" href="{% url 'subcounty_list' %}">Sub-counties</a>{% endif %}
@@ -125,5 +142,11 @@ input[type=checkbox]{width:auto;margin-right:8px}
     {% block content %}{% endblock %}
   </main>
 </div>
+<script>
+(function(){var b=document.getElementById('menubtn'),n=document.getElementById('sidenav');
+if(!b||!n)return;
+b.addEventListener('click',function(){var o=n.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false');});
+})();
+</script>
 </body>
 </html>
