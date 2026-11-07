@@ -141,11 +141,17 @@ SHARED_PLACE = ["sub_county", "parish", "village"]
 
 Register(
     "farmer-registry", m.Farmer, "Farmers", "farmer", None,
-    ["name", "sex", "phone", "household"] + SHARED_PLACE
-    + ["youth", "pwd", "grows_crops", "keeps_livestock", "fish_farming", "status"],
+    ["name", "sex", "age_group", "phone", "national_id", "household"] + SHARED_PLACE
+    + ["youth", "pwd", "grows_crops", "keeps_livestock", "fish_farming",
+       "does_entomology", "is_fisher",
+       "farm_size", "farm_size_unit", "years_farming", "production_notes",
+       "group_name", "pdm_beneficiary", "support_received", "trainings",
+       "latitude", "longitude", "status"],
     [("ID", "code"), ("Name", "name"), ("Sex", "get_sex_display"), ("Phone", "phone"),
      ("Sub-county", "sub_county"), ("Parish", "parish.name"), ("Crops", "grows_crops"),
-     ("Livestock", "keeps_livestock"), ("Fish", "fish_farming"), ("Status", "get_status_display")],
+     ("Livestock", "keeps_livestock"), ("Fish", "fish_farming"),
+     ("Bees/silk", "does_entomology"), ("Fisher", "is_fisher"),
+     ("Status", "get_status_display")],
     search=("name__icontains", "phone__icontains", "code__icontains"),
     exclude={"status": "merged"},
     status_choices=[("active", "Active"), ("inactive", "Inactive")],
