@@ -59,6 +59,7 @@
     <h2>New activity</h2>
     <form id="f" autocomplete="off">
       <label>Date</label><input type="date" id="date" required>
+      <div class="grid"><div><label>Start time</label><input type="time" id="start_time"></div><div><label>End time</label><input type="time" id="end_time"></div></div>
       <label>Department / sector</label><select id="department" required></select>
       <label>Activity type</label><select id="activity_type" required></select>
       <div id="otherbox" style="display:none"><label>Describe the activity</label><input id="other_activity" maxlength="120" placeholder="What was the activity?"></div>
@@ -258,7 +259,7 @@
     var rec = {
       client_id: uid(), saved_at: new Date().toISOString(), submit: !!submit,
       state: 'wait', error: '',
-      date: $('date').value, department: $('department').value,
+      date: $('date').value, start_time: $('start_time').value, end_time: $('end_time').value, department: $('department').value,
       activity_type: $('activity_type').value, other_activity: $('other_activity').value.trim(),
       at_district_hq: $('at_hq').checked,
       sub_county: $('at_hq').checked ? '' : $('sub_county').value,
@@ -274,6 +275,7 @@
   }
   function check(r) {
     if (!r.date) return 'Choose the date.';
+    if (r.start_time && r.end_time && r.end_time <= r.start_time) return 'End time must be after the start time.';
     if (r.date > new Date().toISOString().slice(0, 10)) return 'The date cannot be in the future.';
     if (!r.department) return 'Choose the department.';
     if (!r.activity_type) return 'Choose the activity type.';
