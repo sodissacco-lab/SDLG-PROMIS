@@ -11,4 +11,6 @@ urlpatterns = [
     path("api/summary/", v.summary, name="api_summary"),
     path("api/approvals/", v.approvals, name="api_approvals"),
     path("api/approvals/<int:pk>/", v.decide, name="api_decide"),
+    path("api/farmers/", v.farmers, name="api_farmers"),
+    path("api/farmers/register/", v.farmer_register, name="api_farmer_register"),
 ]
