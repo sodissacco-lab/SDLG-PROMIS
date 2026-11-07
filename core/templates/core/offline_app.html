@@ -13,6 +13,8 @@
   body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#f3f5f4;color:#1c2b22}
   header{background:#1b6b3a;color:#fff;padding:10px 14px;position:sticky;top:0;z-index:5}
   header h1{margin:0;font-size:17px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{width:42px;height:42px;border-radius:50%;background:#fff;object-fit:contain;flex:none}
   header small{opacity:.85}
   #badge{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:14px;font-size:13px;background:#fff;color:#1c2b22}
   #badge.ok{background:#d7f2e0}
@@ -43,8 +45,13 @@
 </head>
 <body>
 <header>
-  <h1>SDLG-Production MIS &middot; Field mode</h1>
-  <small id="who"></small><br>
+  <div class="brand">
+    <img src="{% static 'core/logo.jpg' %}" alt="Soroti District Local Government">
+    <div>
+      <h1>SDLG-Production MIS &middot; Field mode</h1>
+      <small id="who"></small>
+    </div>
+  </div>
   <span id="badge">Starting&hellip;</span>
 </header>
 <main>
@@ -54,9 +61,11 @@
       <label>Date</label><input type="date" id="date" required>
       <label>Department / sector</label><select id="department" required></select>
       <label>Activity type</label><select id="activity_type" required></select>
-      <div class="grid">
-        <div><label>Sub-county</label><select id="sub_county" required></select></div>
-        <div><label>Parish</label><select id="parish" required></select></div>
+      <div id="otherbox" style="display:none"><label>Describe the activity</label><input id="other_activity" maxlength="120" placeholder="What was the activity?"></div>
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="at_hq" style="width:auto;margin:0"> Held at the district headquarters (meeting, office, training)</label>
+      <div class="grid" id="where">
+        <div><label>Sub-county</label><select id="sub_county"></select></div>
+        <div><label>Parish</label><select id="parish"></select></div>
       </div>
       <label>Village</label><input id="village">
       <label>What was done</label><textarea id="description"></textarea>
@@ -250,14 +259,16 @@
       client_id: uid(), saved_at: new Date().toISOString(), submit: !!submit,
       state: 'wait', error: '',
       date: $('date').value, department: $('department').value,
-      activity_type: $('activity_type').value, sub_county: $('sub_county').value,
-      parish: $('parish').value, village: $('village').value.trim(),
+      activity_type: $('activity_type').value, other_activity: $('other_activity').value.trim(),
+      at_district_hq: $('at_hq').checked,
+      sub_county: $('at_hq').checked ? '' : $('sub_county').value,
+      parish: $('at_hq').checked ? '' : $('parish').value, village: $('village').value.trim(),
       description: $('description').value.trim(), findings: $('findings').value.trim(),
       action_taken: $('action_taken').value.trim(),
       male: n('male'), female: n('female'), youth: n('youth'), pwd: n('pwd'),
       latitude: pos ? pos.latitude : null, longitude: pos ? pos.longitude : null,
       photos: photos.slice(),
-      label: ($('activity_type').value || '') + ' - ' + ($('date').value || '')
+      label: (($('activity_type').value || '').indexOf('Other') === 0 && $('other_activity').value.trim() ? $('other_activity').value.trim() : ($('activity_type').value || '')) + ' - ' + ($('date').value || '')
     };
     return rec;
   }
@@ -266,7 +277,8 @@
     if (r.date > new Date().toISOString().slice(0, 10)) return 'The date cannot be in the future.';
     if (!r.department) return 'Choose the department.';
     if (!r.activity_type) return 'Choose the activity type.';
-    if (!r.sub_county || !r.parish) return 'Choose the sub-county and parish.';
+    if ((r.activity_type || '').indexOf('Other') === 0 && !r.other_activity) return 'Describe the activity.';
+    if (!r.at_district_hq && (!r.sub_county || !r.parish)) return 'Choose the sub-county and parish, or tick district headquarters.';
     var t = r.male + r.female;
     if (r.youth > t || r.pwd > t) return 'Youth or PWD cannot be more than male plus female.';
     return '';
@@ -277,7 +289,7 @@
     if (e) return;
     put(r).then(function () {
       photos = []; $('thumbs').innerHTML = '';
-      ['village', 'description', 'findings', 'action_taken'].forEach(function (i) { $(i).value = ''; });
+      ['village', 'description', 'findings', 'action_taken', 'other_activity'].forEach(function (i) { $(i).value = ''; });
       ['male', 'female', 'youth', 'pwd'].forEach(function (i) { $(i).value = 0; });
       render(); sync();
     });
@@ -352,6 +364,8 @@
     $('date').value = new Date().toISOString().slice(0, 10);
     $('department').onchange = onDept;
     $('sub_county').onchange = onSub;
+    $('at_hq').onchange = function () { $('where').style.display = this.checked ? 'none' : ''; };
+    $('activity_type').onchange = function () { $('otherbox').style.display = (this.value || '').indexOf('Other') === 0 ? '' : 'none'; };
     $('gpsbtn').onclick = getGPS;
     $('photos').onchange = function () { addPhotos(this.files); };
     $('savedraft').onclick = function () { save(false); };
