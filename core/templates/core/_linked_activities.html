@@ -12,7 +12,7 @@
     {% for a in items %}
     <tr>
       <td>{{ a.date|date:"d M Y" }}</td>
-      <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_type }}</a></td>
+      <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_label }}</a></td>
       <td>{{ a.officer.get_full_name|default:a.officer.username }}</td>
       <td>{{ a.total_beneficiaries }}</td>
     </tr>
