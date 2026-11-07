@@ -202,7 +202,7 @@ def sync_record(request):
     dept = Department.objects.filter(pk=_int(data.get("department"))).first()
     sub = SubCounty.objects.filter(pk=_int(data.get("sub_county"))).first()
     parish = Parish.objects.filter(pk=_int(data.get("parish"))).first()
-    atype = str(data.get("activity_type", "")).strip()
+    atype = str(data.get("activity_type") or "").strip()
     if not (dept and sub and parish and atype):
         return JsonResponse({"ok": False, "error": "Department, activity type, sub-county and parish are required."}, status=422)
     if parish.sub_county_id != sub.id:
@@ -228,10 +228,10 @@ def sync_record(request):
     put("activity type", ("activity_type",), atype)
     put("sub-county", ("sub_county",), sub)
     put("parish", ("parish",), parish)
-    put("village", ("village",), str(data.get("village", ""))[:100], required_value=False)
-    put("description", ("description", "details"), str(data.get("description", "")))
-    put("findings", ("findings",), str(data.get("findings", "")))
-    put("action taken", ("action_taken", "actions_taken", "action"), str(data.get("action_taken", "")))
+    put("village", ("village",), str(data.get("village") or "")[:100], required_value=False)
+    put("description", ("description", "details"), str(data.get("description") or ""))
+    put("findings", ("findings",), str(data.get("findings") or ""))
+    put("action taken", ("action_taken", "actions_taken", "action"), str(data.get("action_taken") or ""))
     put("male", ("male", "males"), male)
     put("female", ("female", "females"), female)
     put("youth", ("youth",), youth)
