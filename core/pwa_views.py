@@ -32,9 +32,10 @@ except Exception:  # photos not installed
     ActivityPhoto = None
 
 try:
-    from .activity_types import BY_DEPARTMENT
+    from .activity_types import BY_DEPARTMENT, COMMON
 except Exception:
     BY_DEPARTMENT = {}
+    COMMON = []
 
 MAX_PHOTOS = 6
 
@@ -74,7 +75,7 @@ def manifest(request):
 
 
 SERVICE_WORKER = """
-const VERSION = 'promis-v3';
+const VERSION = 'promis-v4';
 const SHELL = ['/offline-app/', '/offline-app/data/', '/manifest.webmanifest',
                '%(i192)s', '%(i512)s', '%(logo)s'];
 
@@ -147,7 +148,12 @@ def lookup_data(u):
     depts = list(Department.objects.order_by("name").values("id", "name"))
     subs = list(SubCounty.objects.order_by("name").values("id", "name"))
     parishes = list(Parish.objects.order_by("name").values("id", "name", "sub_county_id"))
-    types = {name: list(items) for name, items in BY_DEPARTMENT.items()}
+    # every department also gets the common types, including "Other (describe)"
+    names = [d["name"] for d in depts] + [n for n in BY_DEPARTMENT if n not in {d["name"] for d in depts}]
+    types = {}
+    for name in names:
+        items = list(BY_DEPARTMENT.get(name, []))
+        types[name] = items + [c for c in COMMON if c not in items]
     my_dept = getattr(user_obj(u, "department", Department), "id", None)
     my_sub = getattr(user_obj(u, "sub_county", SubCounty), "id", None)
     return {
