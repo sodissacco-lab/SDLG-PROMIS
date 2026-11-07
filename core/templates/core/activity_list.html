@@ -20,8 +20,8 @@
 <div class="card">
   {% for a in activities %}
   <a class="row" href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">
-    <span>{{ a.date|date:"d M Y" }} · {{ a.activity_type }}<br>
-      <small>{{ a.department }} · {{ a.sub_county }}{% if a.parish %}, {{ a.parish.name }}{% endif %}</small></span>
+    <span>{{ a.date|date:"d M Y" }} · {{ a.activity_label }}<br>
+      <small>{{ a.department }} · {% if a.at_district_hq %}District HQ{% else %}{{ a.sub_county }}{% endif %}{% if a.parish %}, {{ a.parish.name }}{% endif %}</small></span>
     <span class="badge {{ a.status }}">{{ a.get_status_display }}</span>
   </a>
   {% empty %}
