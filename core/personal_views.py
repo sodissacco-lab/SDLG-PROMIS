@@ -62,7 +62,7 @@ def my_dashboard(request):
             "value": drafts,
             "sub": "tap to open",
             "dir": "flat",
-            "color": "purple",
+            "color": "grey",
             "href": list_url + "?status=draft",
         },
         {
@@ -103,6 +103,12 @@ def my_dashboard(request):
             "dir": "flat",
             "color": "teal",
         },
+    ]
+
+    # only show indicators that have something to report
+    indicator_tiles = [
+        t for t in indicator_tiles
+        if t["value"] or t["label"].endswith("covered")
     ]
 
     by_department = _group(month_qs, "department__name")
