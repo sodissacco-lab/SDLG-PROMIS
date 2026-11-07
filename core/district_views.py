@@ -83,10 +83,12 @@ def _stats(qs):
 
 
 def _tile(label, cur, prev, color):
-    if prev:
+    if prev and not cur:
+        direction, sub = "flat", "none this month"
+    elif prev:
         pct = round(100.0 * (cur - prev) / prev)
         direction = "up" if pct > 0 else "down" if pct < 0 else "flat"
-        sub = "%d%% from last month" % abs(pct)
+        sub = "%d%% vs last month" % abs(pct)
     elif cur:
         direction, sub = "up", "new this month"
     else:
