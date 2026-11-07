@@ -142,7 +142,7 @@ def _row(a, detail=False):
         "date": _text(_get(a, "date", "activity_date")),
         "activity_type": _text(getattr(a, "activity_label", None) or _get(a, "activity_type")),
         "department": _text(_get(a, "department")),
-        "sub_county": _text(_get(a, "sub_county")),
+        "sub_county": "District HQ" if getattr(a, "at_district_hq", False) else _text(_get(a, "sub_county")),
         "parish": _text(_get(a, "parish")),
         "village": _text(_get(a, "village")),
         "status": _text(_get(a, "status")),
