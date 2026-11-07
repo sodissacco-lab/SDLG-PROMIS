@@ -192,5 +192,8 @@ def activity_review(request, pk):
     return redirect("review_queue")
 def _own_or_subcounty(user, qs):
     if user.role == "subcounty" and user.sub_county:
-        return qs.filter(sub_county__name__iexact=user.sub_county.strip())
+        from django.db.models import Q
+        return qs.filter(
+            Q(sub_county__name__iexact=user.sub_county.strip()) | Q(officer=user)
+        )
     return qs.filter(officer=user)
