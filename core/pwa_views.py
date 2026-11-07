@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import date as date_cls
+from datetime import date as date_cls, time as time_cls
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -32,10 +32,9 @@ except Exception:  # photos not installed
     ActivityPhoto = None
 
 try:
-    from .activity_types import BY_DEPARTMENT, COMMON
+    from .activity_types import BY_DEPARTMENT
 except Exception:
     BY_DEPARTMENT = {}
-    COMMON = []
 
 MAX_PHOTOS = 6
 
@@ -75,7 +74,7 @@ def manifest(request):
 
 
 SERVICE_WORKER = """
-const VERSION = 'promis-v4';
+const VERSION = 'promis-v5';
 const SHELL = ['/offline-app/', '/offline-app/data/', '/manifest.webmanifest',
                '%(i192)s', '%(i512)s', '%(logo)s'];
 
@@ -148,12 +147,7 @@ def lookup_data(u):
     depts = list(Department.objects.order_by("name").values("id", "name"))
     subs = list(SubCounty.objects.order_by("name").values("id", "name"))
     parishes = list(Parish.objects.order_by("name").values("id", "name", "sub_county_id"))
-    # every department also gets the common types, including "Other (describe)"
-    names = [d["name"] for d in depts] + [n for n in BY_DEPARTMENT if n not in {d["name"] for d in depts}]
-    types = {}
-    for name in names:
-        items = list(BY_DEPARTMENT.get(name, []))
-        types[name] = items + [c for c in COMMON if c not in items]
+    types = {name: list(items) for name, items in BY_DEPARTMENT.items()}
     my_dept = getattr(user_obj(u, "department", Department), "id", None)
     my_sub = getattr(user_obj(u, "sub_county", SubCounty), "id", None)
     return {
@@ -239,6 +233,20 @@ def sync_record(request):
         put("activity description", ("other_activity",), str(data.get("other_activity") or "").strip()[:120])
     if at_hq:
         put("district headquarters", ("at_district_hq",), True)
+    def _clock(v):
+        try:
+            h, m = str(v or "").split(":")[:2]
+            return time_cls(int(h), int(m))
+        except (ValueError, TypeError):
+            return None
+
+    t1, t2 = _clock(data.get("start_time")), _clock(data.get("end_time"))
+    if t1 and t2 and t2 <= t1:
+        return JsonResponse({"ok": False, "error": "End time must be after the start time."}, status=422)
+    if t1:
+        put("start time", ("start_time",), t1)
+    if t2:
+        put("end time", ("end_time",), t2)
     put("sub-county", ("sub_county",), sub)
     put("parish", ("parish",), parish)
     put("village", ("village",), str(data.get("village") or "")[:100], required_value=False)
