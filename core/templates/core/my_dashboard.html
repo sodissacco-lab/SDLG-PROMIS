@@ -6,10 +6,20 @@
   .badge.approved{background:#d4edda}
   .badge.returned{background:#f8d7da}
   a.tile{display:block;text-decoration:none}
+  .c-grey{background:linear-gradient(135deg,#6b7a6b,#8a998a)}
+  .c-slate{background:linear-gradient(135deg,#34507d,#4a6ba0)}
+  .cards{display:none}
+  .acard{display:block;text-decoration:none;color:inherit;border:1px solid #e6ece6;border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
+  .acard .t{font-weight:600;font-size:14px;color:#14305c}
+  .acard .m{font-size:12px;color:#5a6b5a;margin-top:2px}
+  .acard .s{float:right}
+  .updated{font-size:12px;color:#5a6b5a;margin:-6px 0 10px}
+  @media (max-width:820px){.tbl{display:none}.cards{display:block}}
   .alert{background:#fdf1f2;border:1px solid #e0a1a8;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px}
 </style>
 <h1>My dashboard</h1>
 <p class="sub">Your own submitted and approved activities, and the work waiting for you</p>
+<p class="updated">Updated {% now "j M Y, H:i" %}</p>
 <div class="nav">
   <a href="?{{ prev_query }}">&larr; Previous</a>
   <b>{{ period }}</b>
@@ -20,21 +30,25 @@
 <div class="alert"><b>{{ returned_count }} activit{{ returned_count|pluralize:"y,ies" }} returned for correction.</b> <a href="{{ returned_url }}">Fix and resubmit</a></div>
 {% endif %}
 
+{% if action_tiles %}
+<div class="tiles">
+  {% for t in action_tiles %}{% if t.value %}
+  <a class="tile c-{{ t.color }}" href="{{ t.href }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{{ t.sub }}</small></a>
+  {% endif %}{% endfor %}
+</div>
+{% endif %}
 <div class="tiles">
   {% for t in key_tiles %}
-  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  <div class="tile c-{% if t.color == 'teal' %}green{% else %}blue{% endif %}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
   {% endfor %}
 </div>
-<div class="tiles">
-  {% for t in action_tiles %}
-  <a class="tile c-{{ t.color }}" href="{{ t.href }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{{ t.sub }}</small></a>
-  {% endfor %}
-</div>
+{% if indicator_tiles %}
 <div class="tiles">
   {% for t in indicator_tiles %}
-  <div class="tile c-{{ t.color }}"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
+  <div class="tile c-slate"><b>{{ t.value }}</b><span>{{ t.label }}</span><small>{% if t.dir == 'up' %}&#9650;{% elif t.dir == 'down' %}&#9660;{% endif %} {{ t.sub }}</small></div>
   {% endfor %}
 </div>
+{% endif %}
 
 <div class="panels">
   <div class="panel">
@@ -84,7 +98,7 @@
         {% for a in recent %}
         <tr>
           <td>{{ a.date|date:"d M Y" }}</td>
-          <td><a href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">{{ a.activity_type }}</a></td>
+          <td><a href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">{% if a.activity_type and a.activity_type != 'None' and a.activity_type != 'Other (describe)' %}{{ a.activity_type }}{% elif a.description %}{{ a.description|truncatechars:40 }}{% else %}Other activity{% endif %}</a></td>
           <td><span class="badge {{ a.department.name|lower }}">{{ a.department }}</span></td>
           <td>{{ a.sub_county|default:"-" }}</td>
           <td>{{ a.parish.name|default:"-" }}</td>
@@ -92,6 +106,15 @@
         </tr>
         {% empty %}<tr><td colspan="6">You have not recorded any activities yet.</td></tr>{% endfor %}
       </table>
+    </div>
+    <div class="cards">
+      {% for a in recent %}
+      <a class="acard" href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">
+        <span class="s badge {{ a.status }}">{{ a.get_status_display }}</span>
+        <div class="t">{% if a.activity_type and a.activity_type != 'None' and a.activity_type != 'Other (describe)' %}{{ a.activity_type }}{% elif a.description %}{{ a.description|truncatechars:40 }}{% else %}Other activity{% endif %}</div>
+        <div class="m">{{ a.date|date:"d M Y" }} &middot; {{ a.department }} &middot; {{ a.sub_county|default:"-" }}{% if a.parish %}, {{ a.parish.name }}{% endif %}</div>
+      </a>
+      {% empty %}<p>You have not recorded any activities yet.</p>{% endfor %}
     </div>
     <p style="margin:10px 0 0"><a href="{% url 'activity_list' %}">View all my activities</a></p>
   </div>
