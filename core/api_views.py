@@ -140,7 +140,7 @@ def _row(a, detail=False):
     row = {
         "id": a.pk,
         "date": _text(_get(a, "date", "activity_date")),
-        "activity_type": _text(_get(a, "activity_type")),
+        "activity_type": _text(getattr(a, "activity_label", None) or _get(a, "activity_type")),
         "department": _text(_get(a, "department")),
         "sub_county": _text(_get(a, "sub_county")),
         "parish": _text(_get(a, "parish")),
@@ -199,7 +199,7 @@ def summary(request):
     out["this_month"] = month_qs.count()
     if s:
         for key in ("draft", "submitted", "approved", "returned"):
-            out[key] = mine_qs.filter(**{s: key}).count()
+            out[key] = month_qs.filter(**{s: key}).count()  # this month only
     out["pending_approval"] = _pending_qs(request.user).count() if is_supervisor(request.user) else 0
     return JsonResponse(out)
 
