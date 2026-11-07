@@ -73,6 +73,17 @@ class Activity(models.Model):
     parish = models.ForeignKey(
         Parish, null=True, blank=True, on_delete=models.SET_NULL
     )
+    other_activity = models.CharField(
+        "Describe the activity",
+        max_length=120,
+        blank=True,
+        help_text="Used when the activity type is Other. This is what shows on the record.",
+    )
+    at_district_hq = models.BooleanField(
+        "Held at the district headquarters",
+        default=False,
+        help_text="Tick for meetings, office work or training at the district headquarters. Sub-county and parish are then not needed.",
+    )
     village = models.CharField(max_length=100, blank=True)
     landing_site = models.ForeignKey(
         "core.LandingSite",
@@ -129,6 +140,13 @@ class Activity(models.Model):
     @property
     def total_beneficiaries(self):
         return self.male + self.female
+
+    @property
+    def activity_label(self):
+        """Name to show on screen: the officer's own words for 'Other'."""
+        if (self.activity_type or "").startswith("Other") and self.other_activity:
+            return self.other_activity
+        return self.activity_type
 
     def __str__(self):
         return f"{self.date} - {self.activity_type} ({self.officer})"
