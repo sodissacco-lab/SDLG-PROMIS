@@ -120,9 +120,9 @@
         {% for a in recent %}
         <tr>
           <td>{{ a.date|date:"d M Y" }}</td>
-          <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_type }}</a></td>
+          <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_label }}</a></td>
           <td><span class="badge {{ a.department.name|lower }}">{{ a.department }}</span></td>
-          <td>{{ a.sub_county|default:"-" }}</td>
+          <td>{% if a.at_district_hq %}District HQ{% else %}{{ a.sub_county|default:"-" }}{% endif %}</td>
           <td>{{ a.parish.name|default:"-" }}</td>
           <td>{{ a.officer.get_full_name|default:a.officer.username }}</td>
         </tr>
