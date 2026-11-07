@@ -31,7 +31,7 @@
 <h2>Recent activities</h2>
 <div class="card">
   {% for a in recent %}
-  <div class="row"><span>{{ a.date|date:"d M" }} · {{ a.activity_type }}</span><span>{{ a.department }}</span></div>
+  <div class="row"><span>{{ a.date|date:"d M" }} · {{ a.activity_label }}</span><span>{{ a.department }}</span></div>
   {% empty %}
   <p>Nothing yet.</p>
   {% endfor %}
