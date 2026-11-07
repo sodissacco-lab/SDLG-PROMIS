@@ -98,9 +98,9 @@
         {% for a in recent %}
         <tr>
           <td>{{ a.date|date:"d M Y" }}</td>
-          <td><a href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">{% if a.activity_type and a.activity_type != 'None' and a.activity_type != 'Other (describe)' %}{{ a.activity_type }}{% elif a.description %}{{ a.description|truncatechars:40 }}{% else %}Other activity{% endif %}</a></td>
+          <td><a href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">{% if a.activity_type and a.activity_type != 'None' and a.activity_label != 'Other (describe)' %}{{ a.activity_label }}{% elif a.description %}{{ a.description|truncatechars:40 }}{% else %}Other activity{% endif %}</a></td>
           <td><span class="badge {{ a.department.name|lower }}">{{ a.department }}</span></td>
-          <td>{{ a.sub_county|default:"-" }}</td>
+          <td>{% if a.at_district_hq %}District HQ{% else %}{{ a.sub_county|default:"-" }}{% endif %}</td>
           <td>{{ a.parish.name|default:"-" }}</td>
           <td><span class="badge {{ a.status }}">{{ a.get_status_display }}</span></td>
         </tr>
@@ -111,8 +111,8 @@
       {% for a in recent %}
       <a class="acard" href="{% if a.status == 'draft' or a.status == 'returned' %}{% url 'activity_edit' a.pk %}{% else %}{% url 'activity_detail' a.pk %}{% endif %}">
         <span class="s badge {{ a.status }}">{{ a.get_status_display }}</span>
-        <div class="t">{% if a.activity_type and a.activity_type != 'None' and a.activity_type != 'Other (describe)' %}{{ a.activity_type }}{% elif a.description %}{{ a.description|truncatechars:40 }}{% else %}Other activity{% endif %}</div>
-        <div class="m">{{ a.date|date:"d M Y" }} &middot; {{ a.department }} &middot; {{ a.sub_county|default:"-" }}{% if a.parish %}, {{ a.parish.name }}{% endif %}</div>
+        <div class="t">{% if a.activity_type and a.activity_type != 'None' and a.activity_label != 'Other (describe)' %}{{ a.activity_label }}{% elif a.description %}{{ a.description|truncatechars:40 }}{% else %}Other activity{% endif %}</div>
+        <div class="m">{{ a.date|date:"d M Y" }} &middot; {{ a.department }} &middot; {% if a.at_district_hq %}District HQ{% else %}{{ a.sub_county|default:"-" }}{% if a.parish %}, {{ a.parish.name }}{% endif %}{% endif %}</div>
       </a>
       {% empty %}<p>You have not recorded any activities yet.</p>{% endfor %}
     </div>
