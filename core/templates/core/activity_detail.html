@@ -8,13 +8,13 @@
   .gallery img{width:100%;border-radius:8px;display:block}
 </style>
 <div class="card">
-  <h2 style="margin-top:0">{{ activity.activity_type }}</h2>
+  <h2 style="margin-top:0">{{ activity.activity_label }}</h2>
   <div class="row"><span>Status</span><b>{{ activity.get_status_display }}</b></div>
   <div class="row"><span>Department</span><span>{{ activity.department }}</span></div>
   <div class="row"><span>Officer</span><span>{{ activity.officer.get_full_name|default:activity.officer.username }}</span></div>
   <div class="row"><span>Date</span><span>{{ activity.date|date:"d M Y" }}</span></div>
   {% if activity.start_time %}<div class="row"><span>Time</span><span>{{ activity.start_time|time:"H:i" }}{% if activity.end_time %} to {{ activity.end_time|time:"H:i" }}{% endif %}</span></div>{% endif %}
-  <div class="row"><span>Location</span><span>{{ activity.sub_county }}{% if activity.parish %}, {{ activity.parish.name }}{% endif %}{% if activity.village %}, {{ activity.village }}{% endif %}</span></div>
+  <div class="row"><span>Location</span><span>{% if activity.at_district_hq %}District headquarters{% else %}{{ activity.sub_county }}{% endif %}{% if activity.parish %}, {{ activity.parish.name }}{% endif %}{% if activity.village %}, {{ activity.village }}{% endif %}</span></div>
   {% if activity.latitude and activity.longitude %}
   <div class="row"><span>GPS</span><span>{{ activity.latitude }}, {{ activity.longitude }} · <a href="https://www.openstreetmap.org/?mlat={{ activity.latitude }}&amp;mlon={{ activity.longitude }}#map=16/{{ activity.latitude }}/{{ activity.longitude }}" target="_blank" rel="noopener">View on map</a></span></div>
   {% endif %}
