@@ -5,6 +5,18 @@ from django.utils import timezone
 SEX = [("F", "Female"), ("M", "Male")]
 ACTIVE = [("active", "Active"), ("inactive", "Inactive")]
 FARM_CATEGORIES = [("household", "Household"), ("non_household", "Non-household")]
+AGE_GROUPS = [
+    ("youth", "Youth (18 to 30)"),
+    ("adult", "Adult (31 to 59)"),
+    ("elder", "Elder (60 and above)"),
+]
+SIZE_UNITS = [
+    ("ponds", "Ponds"),
+    ("boats", "Boats"),
+    ("acres", "Acres"),
+    ("animals", "Animals"),
+    ("hives", "Beehives"),
+]
 
 
 class Stamped(models.Model):
@@ -80,6 +92,29 @@ class Farmer(Coded, Place):
     grows_crops = models.BooleanField("Grows crops", default=False)
     keeps_livestock = models.BooleanField("Keeps livestock", default=False)
     fish_farming = models.BooleanField("Fish farming", default=False)
+    does_entomology = models.BooleanField("Bee-keeping or sericulture", default=False)
+    is_fisher = models.BooleanField("Fisher or boat owner", default=False)
+    national_id = models.CharField("National ID (NIN)", max_length=20, blank=True)
+    age_group = models.CharField(max_length=10, choices=AGE_GROUPS, blank=True)
+    farm_size = models.DecimalField(
+        "Farm size", max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    farm_size_unit = models.CharField(
+        "Unit of farm size", max_length=10, choices=SIZE_UNITS, blank=True
+    )
+    years_farming = models.PositiveSmallIntegerField(
+        "Years farming", null=True, blank=True
+    )
+    production_notes = models.TextField("Production and inputs used", blank=True)
+    group_name = models.CharField("Farmer group", max_length=150, blank=True)
+    pdm_beneficiary = models.BooleanField("PDM beneficiary", default=False)
+    support_received = models.TextField("Support received", blank=True)
+    trainings = models.TextField("Trainings attended", blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    client_id = models.CharField(
+        max_length=64, null=True, blank=True, unique=True, editable=False
+    )
     farm_name = models.CharField("Farm or group name", max_length=250, blank=True)
     farm_category = models.CharField(
         "Farm category", max_length=14, choices=FARM_CATEGORIES, blank=True
