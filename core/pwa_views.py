@@ -74,7 +74,7 @@ def manifest(request):
 
 
 SERVICE_WORKER = """
-const VERSION = 'promis-v2';
+const VERSION = 'promis-v3';
 const SHELL = ['/offline-app/', '/offline-app/data/', '/manifest.webmanifest',
                '%(i192)s', '%(i512)s', '%(logo)s'];
 
@@ -203,9 +203,12 @@ def sync_record(request):
     sub = SubCounty.objects.filter(pk=_int(data.get("sub_county"))).first()
     parish = Parish.objects.filter(pk=_int(data.get("parish"))).first()
     atype = str(data.get("activity_type") or "").strip()
-    if not (dept and sub and parish and atype):
-        return JsonResponse({"ok": False, "error": "Department, activity type, sub-county and parish are required."}, status=422)
-    if parish.sub_county_id != sub.id:
+    at_hq = str(data.get("at_district_hq") or "").lower() in ("1", "true", "yes")
+    if at_hq:
+        sub = parish = None
+    if not (dept and atype and (at_hq or (sub and parish))):
+        return JsonResponse({"ok": False, "error": "Department, activity type, and either sub-county and parish or district headquarters are required."}, status=422)
+    if parish and parish.sub_county_id != sub.id:
         return JsonResponse({"ok": False, "error": "Parish does not belong to that sub-county."}, status=422)
 
     male, female = _int(data.get("male")), _int(data.get("female"))
@@ -226,6 +229,10 @@ def sync_record(request):
     put("date", ("date", "activity_date"), when)
     put("department", ("department",), dept)
     put("activity type", ("activity_type",), atype)
+    if atype.startswith("Other"):
+        put("activity description", ("other_activity",), str(data.get("other_activity") or "").strip()[:120])
+    if at_hq:
+        put("district headquarters", ("at_district_hq",), True)
     put("sub-county", ("sub_county",), sub)
     put("parish", ("parish",), parish)
     put("village", ("village",), str(data.get("village") or "")[:100], required_value=False)
