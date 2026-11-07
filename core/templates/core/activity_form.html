@@ -29,6 +29,7 @@
     <h2>1. What was done</h2>
     {{ form.department.as_field_group }}
     {{ form.activity_type.as_field_group }}
+    {{ form.other_activity.as_field_group }}
     {{ form.date.as_field_group }}
     <div class="two">
       {{ form.start_time.as_field_group }}
@@ -38,6 +39,7 @@
 
   <div class="card">
     <h2>2. Where</h2>
+    {{ form.at_district_hq.as_field_group }}
     {{ form.sub_county.as_field_group }}
     {{ form.parish.as_field_group }}
     {{ form.village.as_field_group }}{{ form.landing_site.as_field_group }}{{ form.farmer.as_field_group }}{{ form.pond.as_field_group }}
@@ -127,6 +129,25 @@
   }
   sub.addEventListener("change", function () { selectedParish = ""; loadParishes(false); });
   loadParishes(true);
+
+  var other = document.getElementById("id_other_activity");
+  function toggleOther() {
+    var show = (type.value || "").indexOf("Other") === 0;
+    other.disabled = !show;
+    other.parentElement.style.display = show ? "" : "none";
+  }
+  type.addEventListener("change", toggleOther);
+  toggleOther();
+
+  var hq = document.getElementById("id_at_district_hq");
+  function toggleHq() {
+    [sub, parish].forEach(function (el) {
+      el.disabled = hq.checked;
+      el.parentElement.style.display = hq.checked ? "none" : "";
+    });
+  }
+  hq.addEventListener("change", toggleHq);
+  toggleHq();
 
   var male = document.getElementById("id_male");
   var female = document.getElementById("id_female");
