@@ -10,10 +10,10 @@
 body{font-family:system-ui,sans-serif;margin:0;background:#f1f4f1;color:#1b2b1b}
 .top{background:#fff;border-bottom:1px solid #dde5dd;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px}
-.brand img{height:48px;width:auto}
+.brand img{height:62px;width:auto}
 .brand b{display:block;font-size:17px;color:#14305c}
 .brand span{font-size:14px;color:#14305c}
-.tag{font-size:13px;font-style:italic;color:#4a5a4a}
+.tag{font-size:12.5px;font-style:italic;color:#4a5a4a;display:block;margin-top:2px}
 .who{display:flex;align-items:center;gap:12px;font-size:13px}
 .who button{background:#fff;border:1px solid #bcc9bc;border-radius:6px;padding:4px 10px;cursor:pointer}
 .menubtn{display:none;background:#0f2a57;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:15px;font-weight:600;cursor:pointer}
@@ -24,7 +24,7 @@ body{font-family:system-ui,sans-serif;margin:0;background:#f1f4f1;color:#1b2b1b}
 .side a.on{background:#1e6fd9;color:#fff}
 .side a.sublink{padding-left:28px;font-size:13px}
 .side a.leaf{padding-left:44px;font-size:13px}
-.side .grp{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#8fa6cf;padding:10px 12px 4px}
+.side .grp{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#cfdcf7;padding:14px 12px 5px;margin-top:8px;border-top:1px solid #2a4a85}
 .side details{margin-bottom:2px}
 .side summary{list-style:none;cursor:pointer;color:#dbe5f7;padding:9px 12px;border-radius:8px;font-size:14px;display:flex;justify-content:space-between}
 .side summary::-webkit-details-marker{display:none}
@@ -49,6 +49,7 @@ input[type=checkbox]{width:auto;margin-right:8px}
   .side{display:none;width:100%;max-height:70vh;overflow-y:auto}
   .side.open{display:block}
   .tag,.who span{display:none}
+  .brand img{height:40px}
   .top{padding:6px 10px;gap:8px}
   .brand img{height:36px}
   .brand b{font-size:14px}
@@ -71,9 +72,8 @@ input[type=checkbox]{width:auto;margin-right:8px}
   <button class="menubtn" id="menubtn" type="button" aria-expanded="false" aria-controls="sidenav">&#9776; Menu</button>
   <div class="brand">
     <img src="{% static 'core/logo.jpg' %}" alt="" onerror="this.style.display='none'">
-    <div><b>Soroti District Local Government</b><span>Production Department MIS</span></div>
+    <div><b>Soroti District Local Government</b><span>Production Department MIS</span><em class="tag">Better Production | Food Security | Prosperity</em></div>
   </div>
-  <div class="tag">Better Production | Food Security | Prosperity</div>
   <div class="who">
     <span>{% now "D, j M Y" %}</span>
     <b>{{ user.get_full_name|default:user.username }}</b>
@@ -124,16 +124,19 @@ input[type=checkbox]{width:auto;margin-right:8px}
 
     {% if nav_admin %}
     <div class="grp">Administration</div>
-    <a href="/manage/sub-counties/">Manage sub-counties</a>
-    <a href="/manage/parishes/">Manage parishes</a>
-    <a href="/manage/users/">Users &amp; Accounts</a>
-    <a href="/manage/targets/">Targets</a>
-    <a href="/manage/settings/">System Settings</a>
-    <a href="/manage/audit/">Audit Trail</a>
-    <a href="/manage/backup/">Backup &amp; Synchronization</a>
-    <a href="/manage/documents/">Document Centre</a>
-    <a href="/manage/partners/">Partners &amp; Projects</a>
-    <a href="/manage/projects/">Projects</a>
+    <details {% if request.path|slice:":8" == "/manage/" %}open{% endif %}>
+      <summary>Administration tools</summary>
+      <a class="sublink" href="/manage/sub-counties/">Manage sub-counties</a>
+      <a class="sublink" href="/manage/parishes/">Manage parishes</a>
+      <a class="sublink" href="/manage/users/">Users &amp; Accounts</a>
+      <a class="sublink" href="/manage/targets/">Targets</a>
+      <a class="sublink" href="/manage/settings/">System Settings</a>
+      <a class="sublink" href="/manage/audit/">Audit Trail</a>
+      <a class="sublink" href="/manage/backup/">Backup &amp; Synchronization</a>
+      <a class="sublink" href="/manage/documents/">Document Centre</a>
+      <a class="sublink" href="/manage/partners/">Partners &amp; Projects</a>
+      <a class="sublink" href="/manage/projects/">Projects</a>
+    </details>
     {% endif %}
   </nav>
   {% endwith %}
