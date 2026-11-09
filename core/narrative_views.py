@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from .letterhead import sector_line
 from .narrative import FIELDS, KEYS, build_sections
 from .narrative_exports import make_narrative_docx, make_narrative_pdf
-from .narrative_registers import register_text
+from .narrative_registers import keep_nonzero, register_text
 from .report_photos import collect_photos
 from .report_registers import register_tables
 from .report_registers_more import more_register_tables
@@ -37,7 +37,7 @@ def _keyed(tables):
         elif title == "Activities implemented":
             keys["activities"] = t
         elif title.startswith("Register statistics"):
-            keys["registers"].append(t)
+            keys["registers"].append(dict(t, rows=keep_nonzero(t["rows"])))
         elif title.startswith("Measured results"):
             keys["measured"].append(t)
     return keys
