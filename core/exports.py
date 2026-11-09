@@ -97,7 +97,7 @@ def _docx_photos(doc, photos):
         for j, ph in enumerate(photos[i : i + 2]):
             para = cells[j].paragraphs[0]
             try:
-                para.add_run().add_picture(ph["path"], width=Inches(3.0))
+                para.add_run().add_picture(io.BytesIO(ph["data"]), width=Inches(3.0))
             except Exception:
                 para.add_run("[photo unavailable]")
             caption = cells[j].add_paragraph(ph["caption"])
@@ -149,9 +149,9 @@ def _pdf_photos(story, photos, styles, cell, width):
     blocks = []
     for ph in photos:
         try:
-            w, h = ImageReader(ph["path"]).getSize()
+            w, h = ImageReader(io.BytesIO(ph["data"])).getSize()
             scale = min(max_w / w, 190.0 / h)
-            img = Image(ph["path"], width=w * scale, height=h * scale)
+            img = Image(io.BytesIO(ph["data"]), width=w * scale, height=h * scale)
         except Exception:
             img = Paragraph("[photo unavailable]", cell)
         blocks.append([img, Paragraph(escape(ph["caption"]), cell)])
