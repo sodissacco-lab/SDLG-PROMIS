@@ -19,14 +19,18 @@ def collect_photos(qs, period, department=None, sub_county=None, limit=12, per_a
     )
     out = []
     counts = {}
+    stats = {"total": photos.count(), "missing": 0, "bad": 0}
+    collect_photos.last = stats
     for p in photos:
         if counts.get(p.activity_id, 0) >= per_activity:
             continue
         try:
             path = p.image.path
         except ValueError:
+            stats["bad"] += 1
             continue
         if not os.path.exists(path):
+            stats["missing"] += 1
             continue
         counts[p.activity_id] = counts.get(p.activity_id, 0) + 1
         a = p.activity
