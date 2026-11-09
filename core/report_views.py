@@ -90,6 +90,10 @@ def _prepare(request):
             "%s image file(s) could not be found on the server."
             % (st.get("total", 0), st.get("missing", 0) + st.get("bad", 0))
         )
+        data["photo_note"] += (
+            " [Storage folder: %s | exists: %s | files in it: %s | first missing file: %s]"
+            % (st.get("root"), st.get("root_exists"), st.get("root_files"), st.get("example", "-"))
+        )
     if user.is_superuser or user.role in DISTRICT_ROLES:
         rtables = register_tables(period, department, sub_county) + more_register_tables(period, department, sub_county)
         # leave out registers with nothing in them
