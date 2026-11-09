@@ -9,7 +9,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from .exports import HEADINGS, SIGNATURES, _docx_photos, _pdf_photos
-from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead
+from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead, sign_line
 from .pack import _docx_table, _pdf_table
 
 PLAN = [
@@ -76,7 +76,7 @@ def make_narrative_docx(data, tables, sections):
             _docx_table(doc, t)
     doc.add_paragraph()
     for label in SIGNATURES:
-        doc.add_paragraph("%s: ______________________    Date: ____________" % label)
+        doc.add_paragraph(sign_line(label, data, False))
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()
@@ -115,10 +115,7 @@ def make_narrative_pdf(data, tables, sections):
     story.append(Spacer(1, 24))
     for label in SIGNATURES:
         story.append(
-            Paragraph(
-                "%s: ______________________ &nbsp;&nbsp; Date: ____________" % label,
-                styles["Normal"],
-            )
+            Paragraph(sign_line(label, data, True), styles["Normal"])
         )
         story.append(Spacer(1, 14))
     doc.build(story, canvasmaker=NumberedCanvas)
