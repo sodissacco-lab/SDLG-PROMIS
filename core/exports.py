@@ -1,324 +1,218 @@
-import calendar
-from datetime import date, timedelta
+import io
+from xml.sax.saxutils import escape
 
-from django.db.models import Count, Sum
-from django.db.models.functions import TruncMonth
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches, Pt
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.utils import ImageReader
+from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead, sign_line
+from .report_style import _row_flags, docx_charts, docx_table, pdf_charts, pdf_table
+from reportlab.platypus import (
+    Image,
+    KeepTogether,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
-from .models import Target
-
-KINDS = [
-    ("daily", "Daily"),
-    ("weekly", "Weekly"),
-    ("monthly", "Monthly"),
-    ("quarterly", "Quarterly"),
-    ("annual", "Annual"),
+HEADINGS = [
+    "SOROTI DISTRICT LOCAL GOVERNMENT",
+    "PRODUCTION DEPARTMENT",
+    "MONTHLY PROGRESS REPORT",
 ]
-QUARTERS = [
-    (1, "Quarter 1 (Jul - Sep)"),
-    (2, "Quarter 2 (Oct - Dec)"),
-    (3, "Quarter 3 (Jan - Mar)"),
-    (4, "Quarter 4 (Apr - Jun)"),
-]
-_QUARTER_START = {1: 7, 2: 10, 3: 1, 4: 4}
+SIGNATURES = ["Prepared by", "Reviewed by", "Approved by"]
 
 
-def fiscal_year_of(d):
-    return d.year if d.month >= 7 else d.year - 1
-
-
-def quarter_of(d):
-    if d.month >= 7:
-        return 1 if d.month <= 9 else 2
-    return 3 if d.month <= 3 else 4
-
-
-def fy_label(fy):
-    return "%d/%s" % (fy, str(fy + 1)[-2:])
-
-
-def quarter_bounds(fy, quarter):
-    start_month = _QUARTER_START[quarter]
-    year = fy if quarter in (1, 2) else fy + 1
-    end_month = start_month + 2
-    start = date(year, start_month, 1)
-    end = date(year, end_month, calendar.monthrange(year, end_month)[1])
-    return start, end
-
-
-def resolve_period(kind, today, day=None, year=None, month=None, fy=None, quarter=None):
-    if kind == "daily":
-        d = day or today
-        return {
-            "kind": kind,
-            "start": d,
-            "end": d,
-            "title": "DAILY ACTIVITY REPORT",
-            "label": d.strftime("%A %d %B %Y"),
-            "filename": "Daily-report-%s" % d.isoformat(),
-        }
-    if kind == "weekly":
-        d = day or today
-        start = d - timedelta(days=d.weekday())
-        end = start + timedelta(days=6)
-        return {
-            "kind": kind,
-            "start": start,
-            "end": end,
-            "title": "WEEKLY ACTIVITY SUMMARY",
-            "label": "%s to %s"
-            % (start.strftime("%A %d %B %Y"), end.strftime("%A %d %B %Y")),
-            "filename": "Weekly-report-%s" % start.isoformat(),
-        }
-    if kind == "quarterly":
-        fy = fy or fiscal_year_of(today)
-        quarter = quarter if quarter in (1, 2, 3, 4) else quarter_of(today)
-        start, end = quarter_bounds(fy, quarter)
-        return {
-            "kind": kind,
-            "start": start,
-            "end": end,
-            "title": "QUARTERLY PERFORMANCE REPORT",
-            "label": "Quarter %d, FY %s (%s - %s)"
-            % (quarter, fy_label(fy), start.strftime("%B"), end.strftime("%B %Y")),
-            "filename": "Quarterly-report-FY%d-Q%d" % (fy, quarter),
-        }
-    if kind == "annual":
-        fy = fy or fiscal_year_of(today)
-        return {
-            "kind": kind,
-            "start": date(fy, 7, 1),
-            "end": date(fy + 1, 6, 30),
-            "title": "ANNUAL PERFORMANCE REPORT",
-            "label": "FY %s (July %d - June %d)" % (fy_label(fy), fy, fy + 1),
-            "filename": "Annual-report-FY%d" % fy,
-        }
-    year = year or today.year
-    month = month or today.month
-    return {
-        "kind": "monthly",
-        "start": date(year, month, 1),
-        "end": date(year, month, calendar.monthrange(year, month)[1]),
-        "title": "MONTHLY PROGRESS REPORT",
-        "label": "%s %s" % (calendar.month_name[month], year),
-        "filename": "Production-report-%s-%02d" % (year, month),
-    }
-
-
-def percent(achieved, target):
-    if not target:
-        return "-"
-    return "%.1f%%" % (100.0 * achieved / target)
-
-
-def build_targets(base, end, department=None, annual_only=False):
-    fy = fiscal_year_of(end)
-    quarter = quarter_of(end)
-    q_start, _ = quarter_bounds(fy, quarter)
-    fy_start = date(fy, 7, 1)
-    base = base.filter(status="approved")
-    targets = Target.objects.filter(fiscal_year=fy).select_related("department")
-    if department:
-        targets = targets.filter(department=department)
-
-    rows = []
-    for t in targets:
-        acts = base.filter(department=t.department)
-        if t.activity_type:
-            acts = acts.filter(activity_type=t.activity_type)
-
-        def achieved(start):
-            part = acts.filter(date__gte=start, date__lte=end)
-            if t.measure == "reached":
-                s = part.aggregate(m=Sum("male"), f=Sum("female"))
-                return (s["m"] or 0) + (s["f"] or 0)
-            return part.count()
-
-        unit = "people reached" if t.measure == "reached" else "activities"
-        label = "%s: %s (%s)" % (
-            t.department.name,
-            t.activity_type or "All activities",
-            unit,
-        )
-        y_done = achieved(fy_start)
-        if annual_only:
-            rows.append([label, t.annual, y_done, percent(y_done, t.annual)])
-        else:
-            q_target = getattr(t, "q%d" % quarter)
-            q_done = achieved(q_start)
-            rows.append(
+def build_tables(data):
+    s = data["summary"]
+    return [
+        {
+            "title": "Summary",
+            "header": ["Indicator", "Total"],
+            "rows": [
+                ["Approved activities", s["activities"]],
+                ["Men reached", s["men"]],
+                ["Women reached", s["women"]],
+                ["Total people reached", s["reached"]],
+                ["Youth", s["youth"]],
+                ["Persons with disability", s["pwd"]],
+            ],
+        },
+        {
+            "title": "By department",
+            "header": ["Department", "Activities", "People reached"],
+            "rows": [
+                [r["name"], r["activities"], r["reached"]]
+                for r in data["by_department"]
+            ],
+        },
+        {
+            "title": "By sub-county",
+            "header": ["Sub-county", "Activities", "People reached"],
+            "rows": [
+                [r["name"], r["activities"], r["reached"]]
+                for r in data["by_sub_county"]
+            ],
+        },
+        {
+            "title": "By activity type",
+            "header": ["Activity type", "Activities", "People reached"],
+            "rows": [
+                [r["name"], r["activities"], r["reached"]] for r in data["by_type"]
+            ],
+        },
+        {
+            "title": "Activities implemented",
+            "header": ["Date", "Time", "Activity", "Department", "Officer", "Location", "Reached"],
+            "weights": [0.12, 0.13, 0.19, 0.11, 0.14, 0.18, 0.13],
+            "rows": [
                 [
-                    label,
-                    q_target,
-                    q_done,
-                    percent(q_done, q_target),
-                    t.annual,
-                    y_done,
-                    percent(y_done, t.annual),
+                    a["date"],
+                    a.get("time", "-"),
+                    a["type"],
+                    a["department"],
+                    a["officer"],
+                    a["location"],
+                    a["reached"],
                 ]
-            )
-
-    if annual_only:
-        return {
-            "title": "Performance against annual targets (FY %s)" % fy_label(fy),
-            "header": ["Indicator", "Annual target", "Achieved", "Achievement %"],
-            "weights": [0.46, 0.18, 0.18, 0.18],
-            "rows": rows,
-        }
-    return {
-        "title": "Performance against targets (FY %s, quarter %d, to %s)"
-        % (fy_label(fy), quarter, end.strftime("%d %B %Y")),
-        "header": [
-            "Indicator",
-            "Quarter target",
-            "Quarter achieved",
-            "Quarter %",
-            "Annual target",
-            "Year to date",
-            "Annual %",
-        ],
-        "weights": [0.28, 0.12, 0.12, 0.10, 0.13, 0.13, 0.12],
-        "rows": rows,
-    }
+                for a in data["activities"]
+            ],
+        },
+    ]
 
 
-def build_report(qs, period, department=None, sub_county=None, include_targets=False):
-    base_qs = qs
-    qs = qs.filter(status="approved", date__gte=period["start"], date__lte=period["end"])
-    if department:
-        qs = qs.filter(department=department)
-    if sub_county:
-        qs = qs.filter(sub_county=sub_county)
+def _docx_photos(doc, photos):
+    doc.add_heading("Photographic evidence", level=2)
+    table = doc.add_table(rows=0, cols=2)
+    for i in range(0, len(photos), 2):
+        row = table.add_row()
+        _row_flags(row)
+        cells = row.cells
+        for j, ph in enumerate(photos[i : i + 2]):
+            para = cells[j].paragraphs[0]
+            try:
+                para.add_run().add_picture(ph["path"], width=Inches(3.0))
+            except Exception:
+                para.add_run("[photo unavailable]")
+            caption = cells[j].add_paragraph(ph["caption"])
+            for run in caption.runs:
+                run.font.size = Pt(8)
 
-    totals = qs.aggregate(
-        m=Sum("male"), f=Sum("female"), y=Sum("youth"), p=Sum("pwd")
+
+def make_docx(data, tables):
+    doc = Document()
+    docx_letterhead(doc, data)
+    doc.add_paragraph("Reporting period: " + data["period"])
+    if data["filters"]:
+        doc.add_paragraph(data["filters"])
+    main = [t for t in tables if not t.get("annex")]
+    annex = [t for t in tables if t.get("annex")]
+    for t in main:
+        if t["title"] == "Activities implemented":
+            docx_charts(doc, data)
+        doc.add_heading(t["title"], level=2)
+        if not t["rows"]:
+            doc.add_paragraph("No records.")
+            continue
+        docx_table(doc, t)
+    if data.get("photos"):
+        _docx_photos(doc, data["photos"])
+    doc.add_paragraph()
+    for n, label in enumerate(SIGNATURES):
+        p = doc.add_paragraph(sign_line(label, data, False))
+        p.paragraph_format.keep_with_next = n < len(SIGNATURES) - 1
+        p.paragraph_format.keep_together = True
+    if annex:
+        doc.add_page_break()
+        doc.add_heading("Annex: Registers and measured results", level=1)
+        for t in annex:
+            doc.add_heading(t["title"], level=2)
+            docx_table(doc, t)
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
+def _pdf_photos(story, photos, styles, cell, width):
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("<b>Photographic evidence</b>", styles["Heading3"]))
+    col = width / 2.0
+    max_w = col - 12
+    blocks = []
+    for ph in photos:
+        try:
+            w, h = ImageReader(ph["path"]).getSize()
+            scale = min(max_w / w, 190.0 / h)
+            img = Image(ph["path"], width=w * scale, height=h * scale)
+        except Exception:
+            img = Paragraph("[photo unavailable]", cell)
+        blocks.append([img, Paragraph(escape(ph["caption"]), cell)])
+    rows = []
+    for i in range(0, len(blocks), 2):
+        pair = blocks[i : i + 2]
+        if len(pair) == 1:
+            pair.append("")
+        rows.append(pair)
+    tbl = Table(rows, colWidths=[col, col])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
     )
-    men = totals["m"] or 0
-    women = totals["f"] or 0
-    summary = {
-        "activities": qs.count(),
-        "men": men,
-        "women": women,
-        "reached": men + women,
-        "youth": totals["y"] or 0,
-        "pwd": totals["p"] or 0,
-    }
+    story.append(tbl)
 
-    def group(field):
-        rows = (
-            qs.order_by()
-            .values(field)
-            .annotate(n=Count("id"), m=Sum("male"), f=Sum("female"))
-            .order_by(field)
-        )
-        return [
-            {
-                "name": r[field] or "Not specified",
-                "activities": r["n"],
-                "reached": (r["m"] or 0) + (r["f"] or 0),
-            }
-            for r in rows
-        ]
 
-    breakdown = None
-    kind = period["kind"]
-    if kind in ("quarterly", "annual"):
-        month_rows = (
-            qs.order_by()
-            .annotate(mon=TruncMonth("date"))
-            .values("mon")
-            .annotate(n=Count("id"), m=Sum("male"), f=Sum("female"))
-            .order_by("mon")
-        )
-        breakdown = {
-            "title": "By month",
-            "label": "Month",
-            "rows": [
-                {
-                    "name": r["mon"].strftime("%B %Y"),
-                    "activities": r["n"],
-                    "reached": (r["m"] or 0) + (r["f"] or 0),
-                }
-                for r in month_rows
-            ],
-        }
-    elif kind == "weekly":
-        day_rows = (
-            qs.order_by()
-            .values("date")
-            .annotate(n=Count("id"), m=Sum("male"), f=Sum("female"))
-            .order_by("date")
-        )
-        breakdown = {
-            "title": "By day",
-            "label": "Day",
-            "rows": [
-                {
-                    "name": r["date"].strftime("%A %d %b"),
-                    "activities": r["n"],
-                    "reached": (r["m"] or 0) + (r["f"] or 0),
-                }
-                for r in day_rows
-            ],
-        }
+def make_pdf(data, tables):
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=28, bottomMargin=58
+    )
+    styles = getSampleStyleSheet()
+    cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8, leading=10)
+    h3 = ParagraphStyle("h3k", parent=styles["Heading3"], keepWithNext=1)
+    width = A4[0] - 72
+    story = list(pdf_letterhead(data, width))
+    story.append(
+        Paragraph("Reporting period: " + escape(data["period"]), styles["Normal"])
+    )
+    if data["filters"]:
+        story.append(Paragraph(escape(data["filters"]), styles["Normal"]))
+    main = [t for t in tables if not t.get("annex")]
+    annex = [t for t in tables if t.get("annex")]
 
-    activities = []
-    items = qs.select_related("department", "sub_county", "parish", "officer")
-    for a in items.order_by("date", "id"):
-        if a.at_district_hq:
-            place = "District HQ"
-        else:
-            place = str(a.sub_county) if a.sub_county else "Not specified"
-            if a.parish and a.parish.name.strip().lower() != place.strip().lower():
-                place += ", " + a.parish.name
-        when = ""
-        if a.start_time:
-            when = a.start_time.strftime("%H:%M")
-            if a.end_time:
-                when += "-" + a.end_time.strftime("%H:%M")
-        activities.append(
-            {
-                "date": a.date.strftime("%d %b %Y"),
-                "time": when or "-",
-                "type": a.activity_label,
-                "department": str(a.department),
-                "officer": a.officer.get_full_name() or a.officer.username,
-                "location": place,
-                "reached": a.total_beneficiaries,
-            }
-        )
+    def add_table(t):
+        story.append(Spacer(1, 12))
+        story.append(Paragraph("<b>%s</b>" % escape(t["title"]), h3))
+        if not t["rows"]:
+            story.append(Paragraph("No records.", styles["Normal"]))
+            return
+        story.append(pdf_table(t, cell, width))
 
-    by_type = {}
-    for t, other, m, f in qs.order_by().values_list(
-        "activity_type", "other_activity", "male", "female"
-    ):
-        name = other if (t or "").startswith("Other") and other else (t or "Not specified")
-        row = by_type.setdefault(name, {"name": name, "activities": 0, "reached": 0})
-        row["activities"] += 1
-        row["reached"] += (m or 0) + (f or 0)
-    by_type = sorted(by_type.values(), key=lambda r: r["name"])
-
-    parts = []
-    if department:
-        parts.append("Department: " + department.name)
-    if sub_county:
-        parts.append("Sub-county: " + sub_county.name)
-
-    targets = None
-    if include_targets and kind in ("monthly", "quarterly", "annual"):
-        targets = build_targets(
-            base_qs, period["end"], department, annual_only=(kind == "annual")
-        )
-
-    return {
-        "title": period["title"],
-        "period": period["label"],
-        "filters": " | ".join(parts),
-        "filename": period["filename"],
-        "summary": summary,
-        "by_department": group("department__name"),
-        "by_sub_county": group("sub_county__name"),
-        "by_type": by_type,
-        "breakdown": breakdown,
-        "activities": activities,
-        "targets": targets,
-    }
+    for t in main:
+        if t["title"] == "Activities implemented":
+            story.append(Spacer(1, 12))
+            story.extend(pdf_charts(data, width, h3))
+        add_table(t)
+    if data.get("photos"):
+        _pdf_photos(story, data["photos"], styles, cell, width)
+    sign = [Spacer(1, 24)]
+    for label in SIGNATURES:
+        sign.append(Paragraph(sign_line(label, data, True), styles["Normal"]))
+        sign.append(Spacer(1, 14))
+    story.append(KeepTogether(sign))
+    if annex:
+        story.append(PageBreak())
+        story.append(Paragraph("<b>Annex: Registers and measured results</b>", styles["Heading2"]))
+        for t in annex:
+            add_table(t)
+    doc.build(story, canvasmaker=NumberedCanvas)
+    return buf.getvalue()
