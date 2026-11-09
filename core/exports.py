@@ -9,8 +9,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.utils import ImageReader
 from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead, sign_line
+from .report_style import _row_flags, docx_charts, docx_table, pdf_charts, pdf_table
 from reportlab.platypus import (
     Image,
+    KeepTogether,
+    PageBreak,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
@@ -88,7 +91,9 @@ def _docx_photos(doc, photos):
     doc.add_heading("Photographic evidence", level=2)
     table = doc.add_table(rows=0, cols=2)
     for i in range(0, len(photos), 2):
-        cells = table.add_row().cells
+        row = table.add_row()
+        _row_flags(row)
+        cells = row.cells
         for j, ph in enumerate(photos[i : i + 2]):
             para = cells[j].paragraphs[0]
             try:
@@ -106,28 +111,29 @@ def make_docx(data, tables):
     doc.add_paragraph("Reporting period: " + data["period"])
     if data["filters"]:
         doc.add_paragraph(data["filters"])
-    for t in tables:
+    main = [t for t in tables if not t.get("annex")]
+    annex = [t for t in tables if t.get("annex")]
+    for t in main:
+        if t["title"] == "Activities implemented":
+            docx_charts(doc, data)
         doc.add_heading(t["title"], level=2)
         if not t["rows"]:
             doc.add_paragraph("No records.")
             continue
-        table = doc.add_table(rows=1, cols=len(t["header"]))
-        table.style = "Table Grid"
-        for i, h in enumerate(t["header"]):
-            cell = table.rows[0].cells[i]
-            cell.text = h
-            for para in cell.paragraphs:
-                for run in para.runs:
-                    run.bold = True
-        for row in t["rows"]:
-            cells = table.add_row().cells
-            for i, value in enumerate(row):
-                cells[i].text = str(value)
+        docx_table(doc, t)
     if data.get("photos"):
         _docx_photos(doc, data["photos"])
     doc.add_paragraph()
-    for label in SIGNATURES:
-        doc.add_paragraph(sign_line(label, data, False))
+    for n, label in enumerate(SIGNATURES):
+        p = doc.add_paragraph(sign_line(label, data, False))
+        p.paragraph_format.keep_with_next = n < len(SIGNATURES) - 1
+        p.paragraph_format.keep_together = True
+    if annex:
+        doc.add_page_break()
+        doc.add_heading("Annex: Registers and measured results", level=1)
+        for t in annex:
+            doc.add_heading(t["title"], level=2)
+            docx_table(doc, t)
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()
@@ -171,10 +177,8 @@ def make_pdf(data, tables):
         buf, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=28, bottomMargin=58
     )
     styles = getSampleStyleSheet()
-    center = ParagraphStyle(
-        "center", parent=styles["Normal"], alignment=1, fontSize=12, leading=15
-    )
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8, leading=10)
+    h3 = ParagraphStyle("h3k", parent=styles["Heading3"], keepWithNext=1)
     width = A4[0] - 72
     story = list(pdf_letterhead(data, width))
     story.append(
@@ -182,35 +186,33 @@ def make_pdf(data, tables):
     )
     if data["filters"]:
         story.append(Paragraph(escape(data["filters"]), styles["Normal"]))
-    for t in tables:
+    main = [t for t in tables if not t.get("annex")]
+    annex = [t for t in tables if t.get("annex")]
+
+    def add_table(t):
         story.append(Spacer(1, 12))
-        story.append(Paragraph("<b>%s</b>" % escape(t["title"]), styles["Heading3"]))
+        story.append(Paragraph("<b>%s</b>" % escape(t["title"]), h3))
         if not t["rows"]:
             story.append(Paragraph("No records.", styles["Normal"]))
-            continue
-        count = len(t["header"])
-        weights = t.get("weights") or [1.0 / count] * count
-        rows = [[Paragraph("<b>%s</b>" % escape(str(h)), cell) for h in t["header"]]]
-        for r in t["rows"]:
-            rows.append([Paragraph(escape(str(v)), cell) for v in r])
-        tbl = Table(rows, colWidths=[width * w for w in weights], repeatRows=1)
-        tbl.setStyle(
-            TableStyle(
-                [
-                    ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e6ece6")),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-        story.append(tbl)
+            return
+        story.append(pdf_table(t, cell, width))
+
+    for t in main:
+        if t["title"] == "Activities implemented":
+            story.append(Spacer(1, 12))
+            story.extend(pdf_charts(data, width, h3))
+        add_table(t)
     if data.get("photos"):
         _pdf_photos(story, data["photos"], styles, cell, width)
-    story.append(Spacer(1, 24))
+    sign = [Spacer(1, 24)]
     for label in SIGNATURES:
-        story.append(
-            Paragraph(sign_line(label, data, True), styles["Normal"])
-        )
-        story.append(Spacer(1, 14))
+        sign.append(Paragraph(sign_line(label, data, True), styles["Normal"]))
+        sign.append(Spacer(1, 14))
+    story.append(KeepTogether(sign))
+    if annex:
+        story.append(PageBreak())
+        story.append(Paragraph("<b>Annex: Registers and measured results</b>", styles["Heading2"]))
+        for t in annex:
+            add_table(t)
     doc.build(story, canvasmaker=NumberedCanvas)
     return buf.getvalue()
