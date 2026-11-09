@@ -1,5 +1,6 @@
 from datetime import date
 
+from .letterhead import sector_line
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -78,6 +79,7 @@ def _prepare(request):
         user.is_superuser or user.role in DISTRICT_ROLES
     )
     data = build_report(base, period, department, sub_county, include_targets)
+    data["sector_line"] = sector_line(department, sub_county)
     data["photos"] = collect_photos(base, period, department, sub_county)
     if user.is_superuser or user.role in DISTRICT_ROLES:
         data["register_tables"] = register_tables(period, department, sub_county) + more_register_tables(period, department, sub_county)

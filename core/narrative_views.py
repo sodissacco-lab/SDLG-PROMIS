@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
+from .letterhead import sector_line
 from .narrative import FIELDS, KEYS, build_sections
 from .narrative_exports import make_narrative_docx, make_narrative_pdf
 from .narrative_registers import register_text
@@ -48,6 +49,7 @@ def _load(request):
     base = visible_activities(user)
     district = user.is_superuser or user.role in DISTRICT_ROLES
     data = build_report(base, period, department, sub_county, sub_county is None and district)
+    data["sector_line"] = sector_line(department, sub_county)
     data["photos"] = collect_photos(base, period, department, sub_county)
     if district:
         data["register_tables"] = register_tables(period, department, sub_county) + more_register_tables(

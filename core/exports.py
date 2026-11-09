@@ -8,6 +8,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.utils import ImageReader
+from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead
 from reportlab.platypus import (
     Image,
     Paragraph,
@@ -100,12 +101,7 @@ def _docx_photos(doc, photos):
 
 def make_docx(data, tables):
     doc = Document()
-    for text, size in zip(HEADINGS[:2] + [data["title"]], (14, 12, 14)):
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(text)
-        run.bold = True
-        run.font.size = Pt(size)
+    docx_letterhead(doc, data)
     doc.add_paragraph("Reporting period: " + data["period"])
     if data["filters"]:
         doc.add_paragraph(data["filters"])
@@ -171,23 +167,20 @@ def _pdf_photos(story, photos, styles, cell, width):
 def make_pdf(data, tables):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
-        buf, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36
+        buf, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=28, bottomMargin=58
     )
     styles = getSampleStyleSheet()
     center = ParagraphStyle(
         "center", parent=styles["Normal"], alignment=1, fontSize=12, leading=15
     )
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8, leading=10)
-    story = []
-    for h in HEADINGS[:2] + [data["title"]]:
-        story.append(Paragraph("<b>%s</b>" % escape(h), center))
-    story.append(Spacer(1, 10))
+    width = A4[0] - 72
+    story = list(pdf_letterhead(data, width))
     story.append(
         Paragraph("Reporting period: " + escape(data["period"]), styles["Normal"])
     )
     if data["filters"]:
         story.append(Paragraph(escape(data["filters"]), styles["Normal"]))
-    width = A4[0] - 72
     for t in tables:
         story.append(Spacer(1, 12))
         story.append(Paragraph("<b>%s</b>" % escape(t["title"]), styles["Heading3"]))
@@ -221,5 +214,5 @@ def make_pdf(data, tables):
             )
         )
         story.append(Spacer(1, 14))
-    doc.build(story)
+    doc.build(story, canvasmaker=NumberedCanvas)
     return buf.getvalue()

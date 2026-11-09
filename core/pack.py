@@ -17,6 +17,7 @@ from reportlab.platypus import (
 )
 
 from .exports import HEADINGS, SIGNATURES, build_tables
+from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead
 
 
 def _section_tables(data):
@@ -45,7 +46,7 @@ def _pdf_table(t, cell, width):
 def make_pack_pdf(title, period_label, sections, empty):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
-        buf, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=36
+        buf, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=28, bottomMargin=58
     )
     styles = getSampleStyleSheet()
     center = ParagraphStyle(
@@ -53,10 +54,7 @@ def make_pack_pdf(title, period_label, sections, empty):
     )
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8, leading=10)
     width = A4[0] - 72
-    story = []
-    for h in HEADINGS[:2] + [title]:
-        story.append(Paragraph("<b>%s</b>" % escape(h), center))
-    story.append(Spacer(1, 10))
+    story = list(pdf_letterhead({"title": title}, width))
     story.append(Paragraph("Reporting period: " + escape(period_label), styles["Normal"]))
     for i, (heading, data) in enumerate(sections):
         if i:
@@ -87,7 +85,7 @@ def make_pack_pdf(title, period_label, sections, empty):
             )
         )
         story.append(Spacer(1, 14))
-    doc.build(story)
+    doc.build(story, canvasmaker=NumberedCanvas)
     return buf.getvalue()
 
 
@@ -108,12 +106,7 @@ def _docx_table(doc, t):
 
 def make_pack_docx(title, period_label, sections, empty):
     doc = Document()
-    for text, size in zip(HEADINGS[:2] + [title], (14, 12, 14)):
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = p.add_run(text)
-        run.bold = True
-        run.font.size = Pt(size)
+    docx_letterhead(doc, {"title": title})
     doc.add_paragraph("Reporting period: " + period_label)
     for i, (heading, data) in enumerate(sections):
         if i:
