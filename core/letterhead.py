@@ -295,3 +295,15 @@ def docx_letterhead(doc, data):
     field(f3, "PAGE")
     style_run(f3.add_run(" of "), size=7, bold=False, italic=True, color="444444")
     field(f3, "NUMPAGES")
+
+
+def sign_line(label, data, html=True):
+    """'Prepared by' carries the officer's name; the other lines stay blank to sign."""
+    name = (data or {}).get("prepared_by") if label == "Prepared by" else ""
+    if not name:
+        if html:
+            return "%s: ______________________ &nbsp;&nbsp; Date: ____________" % label
+        return "%s: ______________________    Date: ____________" % label
+    if html:
+        return "%s: <u>%s</u> &nbsp;&nbsp; Date: <u>%s</u>" % (label, escape(name), date_text())
+    return "%s: %s    Date: %s" % (label, name, date_text())
