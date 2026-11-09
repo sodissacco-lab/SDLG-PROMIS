@@ -123,6 +123,8 @@ def make_docx(data, tables):
         docx_table(doc, t)
     if data.get("photos"):
         _docx_photos(doc, data["photos"])
+    elif data.get("photo_note"):
+        doc.add_paragraph(data["photo_note"])
     doc.add_paragraph()
     for n, label in enumerate(SIGNATURES):
         p = doc.add_paragraph(sign_line(label, data, False))
@@ -204,6 +206,9 @@ def make_pdf(data, tables):
         add_table(t)
     if data.get("photos"):
         _pdf_photos(story, data["photos"], styles, cell, width)
+    elif data.get("photo_note"):
+        story.append(Spacer(1, 8))
+        story.append(Paragraph(escape(data["photo_note"]), cell))
     sign = [Spacer(1, 24)]
     for label in SIGNATURES:
         sign.append(Paragraph(sign_line(label, data, True), styles["Normal"]))
