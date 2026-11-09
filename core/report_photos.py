@@ -1,5 +1,7 @@
 import os
 
+from django.conf import settings
+
 from .photo_models import ActivityPhoto
 
 
@@ -21,6 +23,14 @@ def collect_photos(qs, period, department=None, sub_county=None, limit=12, per_a
     counts = {}
     stats = {"total": photos.count(), "missing": 0, "bad": 0}
     collect_photos.last = stats
+    root = str(settings.MEDIA_ROOT)
+    n_files = 0
+    if os.path.isdir(root):
+        for _r, _d, fs in os.walk(root):
+            n_files += len(fs)
+    stats["root"] = root
+    stats["root_exists"] = os.path.isdir(root)
+    stats["root_files"] = n_files
     for p in photos:
         if counts.get(p.activity_id, 0) >= per_activity:
             continue
@@ -31,6 +41,7 @@ def collect_photos(qs, period, department=None, sub_county=None, limit=12, per_a
             continue
         if not os.path.exists(path):
             stats["missing"] += 1
+            stats.setdefault("example", path)
             continue
         counts[p.activity_id] = counts.get(p.activity_id, 0) + 1
         a = p.activity
