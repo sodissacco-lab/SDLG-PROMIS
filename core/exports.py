@@ -8,7 +8,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.utils import ImageReader
-from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead
+from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead, sign_line
 from reportlab.platypus import (
     Image,
     Paragraph,
@@ -66,11 +66,12 @@ def build_tables(data):
         },
         {
             "title": "Activities implemented",
-            "header": ["Date", "Activity", "Department", "Officer", "Location", "Reached"],
-            "weights": [0.11, 0.25, 0.13, 0.17, 0.22, 0.12],
+            "header": ["Date", "Time", "Activity", "Department", "Officer", "Location", "Reached"],
+            "weights": [0.12, 0.13, 0.19, 0.11, 0.14, 0.18, 0.13],
             "rows": [
                 [
                     a["date"],
+                    a.get("time", "-"),
                     a["type"],
                     a["department"],
                     a["officer"],
@@ -126,7 +127,7 @@ def make_docx(data, tables):
         _docx_photos(doc, data["photos"])
     doc.add_paragraph()
     for label in SIGNATURES:
-        doc.add_paragraph("%s: ______________________    Date: ____________" % label)
+        doc.add_paragraph(sign_line(label, data, False))
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()
@@ -208,10 +209,7 @@ def make_pdf(data, tables):
     story.append(Spacer(1, 24))
     for label in SIGNATURES:
         story.append(
-            Paragraph(
-                "%s: ______________________ &nbsp;&nbsp; Date: ____________" % label,
-                styles["Normal"],
-            )
+            Paragraph(sign_line(label, data, True), styles["Normal"])
         )
         story.append(Spacer(1, 14))
     doc.build(story, canvasmaker=NumberedCanvas)
