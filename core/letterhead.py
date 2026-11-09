@@ -79,16 +79,21 @@ def pdf_letterhead(data, width):
         Paragraph(escape(SACAO_TEL), mid),
         Paragraph(escape(AFO_TEL), mid),
     ]
-    side = 1.3 * inch
+    side, mid_w = 1.3 * inch, 3.7 * inch
     left, right = [], []
     if ARMS.exists():
-        left = [_fit(ARMS, 1.05 * inch), Paragraph("THE REPUBLIC OF UGANDA", cap)]
+        arms = _fit(ARMS, 1.1 * inch)
+        arms.hAlign = "RIGHT"
+        cap.alignment = TA_RIGHT
+        left = [arms, Paragraph("THE REPUBLIC OF UGANDA", cap)]
     if EMBLEM.exists():
-        right = [_fit(EMBLEM, 0.95 * inch)]
-    tbl = Table([[left, centre, right]], colWidths=[side, width - 2 * side, side])
+        emb = _fit(EMBLEM, 1.0 * inch)
+        emb.hAlign = "LEFT"
+        right = [emb]
+    tbl = Table([[left, centre, right]], colWidths=[side, mid_w, side])
+    tbl.hAlign = "CENTER"
     tbl.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("ALIGN", (2, 0), (2, 0), "RIGHT"),
         ("LEFTPADDING", (0, 0), (-1, -1), 0),
         ("RIGHTPADDING", (0, 0), (-1, -1), 0),
     ]))
@@ -206,17 +211,17 @@ def docx_letterhead(doc, data):
     tbl = doc.add_table(rows=1, cols=3)
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl.autofit = False
-    widths = (Inches(1.5), Inches(3.5), Inches(1.5))
+    widths = (Inches(1.4), Inches(3.6), Inches(1.3))
     for col, w in zip(tbl.columns, widths):
         col.width = w
     for cell, w in zip(tbl.rows[0].cells, widths):
         cell.width = w
     left, mid, right = tbl.rows[0].cells
 
-    lp = para(left, first=True, align=WD_ALIGN_PARAGRAPH.LEFT)
+    lp = para(left, first=True, align=WD_ALIGN_PARAGRAPH.RIGHT)
     if ARMS.exists():
         lp.add_run().add_picture(str(ARMS), width=Inches(1.1))
-    para(left, "THE REPUBLIC OF UGANDA", align=WD_ALIGN_PARAGRAPH.LEFT, size=6)
+    para(left, "THE REPUBLIC OF UGANDA", align=WD_ALIGN_PARAGRAPH.RIGHT, size=5.5)
 
     para(mid, DISTRICT, first=True)
     para(mid, data.get("sector_line") or DEFAULT_SECTOR)
@@ -232,9 +237,9 @@ def docx_letterhead(doc, data):
     para(mid, SACAO_TEL)
     para(mid, AFO_TEL)
 
-    rp = para(right, first=True, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    rp = para(right, first=True, align=WD_ALIGN_PARAGRAPH.LEFT)
     if EMBLEM.exists():
-        rp.add_run().add_picture(str(EMBLEM), width=Inches(0.95))
+        rp.add_run().add_picture(str(EMBLEM), width=Inches(1.0))
 
     p = para(doc, POBOX, align=WD_ALIGN_PARAGRAPH.LEFT, size=11)
     p.paragraph_format.space_before = Pt(6)
