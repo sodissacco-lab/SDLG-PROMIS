@@ -50,6 +50,7 @@ def _load(request):
     district = user.is_superuser or user.role in DISTRICT_ROLES
     data = build_report(base, period, department, sub_county, sub_county is None and district)
     data["sector_line"] = sector_line(department, sub_county)
+    data["prepared_by"] = user.get_full_name() or user.username
     data["photos"] = collect_photos(base, period, department, sub_county)
     if district:
         data["register_tables"] = register_tables(period, department, sub_county) + more_register_tables(
