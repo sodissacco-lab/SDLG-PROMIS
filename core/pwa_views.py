@@ -301,8 +301,20 @@ def sync_record(request):
             if by:
                 extra[by] = request.user
             if img_field and fk_field:
+                try:
+                    from .photos import process_image, stamp_lines
+                    lines = stamp_lines(activity, request.user)
+                except Exception:
+                    process_image = lines = None
                 for f in request.FILES.getlist("photos")[:MAX_PHOTOS]:
-                    ActivityPhoto.objects.create(**{fk_field: activity, img_field: f}, **extra)
+                    content = f
+                    if process_image is not None:
+                        try:
+                            # same date / officer / place / GPS stamp as website uploads
+                            content = process_image(f, lines)
+                        except Exception:
+                            content = f
+                    ActivityPhoto.objects.create(**{fk_field: activity, img_field: content}, **extra)
                     saved_photos += 1
 
     return JsonResponse({"ok": True, "id": activity.pk, "photos": saved_photos, "stored": sorted(set(stored))})
