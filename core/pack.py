@@ -18,29 +18,11 @@ from reportlab.platypus import (
 
 from .exports import HEADINGS, SIGNATURES, build_tables
 from .letterhead import NumberedCanvas, docx_letterhead, pdf_letterhead
+from .report_style import docx_table as _docx_table, pdf_table as _pdf_table
 
 
 def _section_tables(data):
-    return [t for t in build_tables(data) if t["title"] != "By sub-county"] + data.get("register_tables", []) + data.get("register_tables", [])
-
-
-def _pdf_table(t, cell, width):
-    count = len(t["header"])
-    weights = t.get("weights") or [1.0 / count] * count
-    rows = [[Paragraph("<b>%s</b>" % escape(str(h)), cell) for h in t["header"]]]
-    for r in t["rows"]:
-        rows.append([Paragraph(escape(str(v)), cell) for v in r])
-    tbl = Table(rows, colWidths=[width * w for w in weights], repeatRows=1)
-    tbl.setStyle(
-        TableStyle(
-            [
-                ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e6ece6")),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ]
-        )
-    )
-    return tbl
+    return [t for t in build_tables(data) if t["title"] != "By sub-county"] + data.get("register_tables", [])
 
 
 def make_pack_pdf(title, period_label, sections, empty):
@@ -87,21 +69,6 @@ def make_pack_pdf(title, period_label, sections, empty):
         story.append(Spacer(1, 14))
     doc.build(story, canvasmaker=NumberedCanvas)
     return buf.getvalue()
-
-
-def _docx_table(doc, t):
-    table = doc.add_table(rows=1, cols=len(t["header"]))
-    table.style = "Table Grid"
-    for i, h in enumerate(t["header"]):
-        cell = table.rows[0].cells[i]
-        cell.text = h
-        for para in cell.paragraphs:
-            for run in para.runs:
-                run.bold = True
-    for row in t["rows"]:
-        cells = table.add_row().cells
-        for i, value in enumerate(row):
-            cells[i].text = str(value)
 
 
 def make_pack_docx(title, period_label, sections, empty):
