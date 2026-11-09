@@ -20,8 +20,11 @@ from .report_registers import _in, _row, _sum
 
 def _has_value(row):
     """True when a measured result is not zero, so empty results stay out of reports."""
+    text = str(row[1]).replace(",", "").replace("%", "").strip()
+    if text in ("", "-", "\u2014", "None", "n/a", "N/A"):
+        return False
     try:
-        return float(str(row[1]).replace(",", "").strip() or 0) != 0
+        return float(text) != 0
     except ValueError:
         return True
 
