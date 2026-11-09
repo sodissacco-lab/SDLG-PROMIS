@@ -5,7 +5,7 @@ from xml.sax.saxutils import escape
 from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import KeepTogether, Paragraph, Table, TableStyle 
+from reportlab.platypus import KeepTogether, Paragraph, Table, TableStyle
 
 GREEN = "#1f5c3a"
 HEAD_BG = "#e6ece6"
