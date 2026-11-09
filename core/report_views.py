@@ -83,6 +83,13 @@ def _prepare(request):
     data["sector_line"] = sector_line(department, sub_county)
     data["prepared_by"] = user.get_full_name() or user.username
     data["photos"] = collect_photos(base, period, department, sub_county)
+    st = getattr(collect_photos, "last", {})
+    if not data["photos"]:
+        data["photo_note"] = (
+            "Photographs: %s on record for approved activities in this period; "
+            "%s image file(s) could not be found on the server."
+            % (st.get("total", 0), st.get("missing", 0) + st.get("bad", 0))
+        )
     if user.is_superuser or user.role in DISTRICT_ROLES:
         rtables = register_tables(period, department, sub_county) + more_register_tables(period, department, sub_county)
         # leave out registers with nothing in them
