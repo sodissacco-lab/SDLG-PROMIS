@@ -15,24 +15,24 @@ body{font-family:system-ui,sans-serif;margin:0;background:#f1f4f1;color:#1b2b1b}
 .brand span{font-size:14px;color:#14305c}
 .tag{font-size:12.5px;font-style:italic;color:#4a5a4a;display:block;margin-top:2px}
 .sectors{flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.sectors .track{display:flex;gap:8px;width:max-content;animation:sectorscroll 28s linear infinite}
-.sectors:hover .track{animation-play-state:paused}
-.sectors .chip{border-width:1.5px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 12px;border-radius:10px;background:#eef5ef;border:1px solid #d5e3d8;color:#1f5c3a;font-size:10.5px;font-weight:600;white-space:nowrap}
-.sectors svg{width:26px;height:26px;stroke:#1f5c3a;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.sectors .chip:nth-child(6n+1){background:#e3f4e6;border-color:#2e9e4f;color:#1b6b33;box-shadow:0 2px 6px #2e9e4f33}
-.sectors .chip:nth-child(6n+1) svg{stroke:#1b6b33}
-.sectors .chip:nth-child(6n+2){background:#e0f0fc;border-color:#2a8bd6;color:#145a96;box-shadow:0 2px 6px #2a8bd633}
-.sectors .chip:nth-child(6n+2) svg{stroke:#145a96}
-.sectors .chip:nth-child(6n+3){background:#fdeede;border-color:#e9822a;color:#a24f0a;box-shadow:0 2px 6px #e9822a33}
-.sectors .chip:nth-child(6n+3) svg{stroke:#a24f0a}
-.sectors .chip:nth-child(6n+4){background:#fff6cc;border-color:#e3b505;color:#8a6a00;box-shadow:0 2px 6px #e3b50533}
-.sectors .chip:nth-child(6n+4) svg{stroke:#8a6a00}
-.sectors .chip:nth-child(6n+5){background:#f6e6fa;border-color:#a64bc4;color:#6d2a87;box-shadow:0 2px 6px #a64bc433}
-.sectors .chip:nth-child(6n+5) svg{stroke:#6d2a87}
-.sectors .chip:nth-child(6n+6){background:#fde4e8;border-color:#e0475b;color:#9a1f31;box-shadow:0 2px 6px #e0475b33}
-.sectors .chip:nth-child(6n+6) svg{stroke:#9a1f31}
+.sectors .sectrack{display:flex;gap:12px;width:max-content;animation:sectorscroll 28s linear infinite}
+.sectors:hover .sectrack{animation-play-state:paused}
+.sectors .secchip{border-width:2px;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 18px;border-radius:14px;background:#eef5ef;border:1px solid #d5e3d8;color:#1f5c3a;font-size:10.5px;font-weight:600;white-space:nowrap}
+.sectors svg{width:42px;height:42px;stroke:#1f5c3a;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.sectors .secchip:nth-child(6n+1){background:#e3f4e6;border-color:#2e9e4f;color:#1b6b33;box-shadow:0 2px 6px #2e9e4f33}
+.sectors .secchip:nth-child(6n+1) svg{stroke:#1b6b33}
+.sectors .secchip:nth-child(6n+2){background:#e0f0fc;border-color:#2a8bd6;color:#145a96;box-shadow:0 2px 6px #2a8bd633}
+.sectors .secchip:nth-child(6n+2) svg{stroke:#145a96}
+.sectors .secchip:nth-child(6n+3){background:#fdeede;border-color:#e9822a;color:#a24f0a;box-shadow:0 2px 6px #e9822a33}
+.sectors .secchip:nth-child(6n+3) svg{stroke:#a24f0a}
+.sectors .secchip:nth-child(6n+4){background:#fff6cc;border-color:#e3b505;color:#8a6a00;box-shadow:0 2px 6px #e3b50533}
+.sectors .secchip:nth-child(6n+4) svg{stroke:#8a6a00}
+.sectors .secchip:nth-child(6n+5){background:#f6e6fa;border-color:#a64bc4;color:#6d2a87;box-shadow:0 2px 6px #a64bc433}
+.sectors .secchip:nth-child(6n+5) svg{stroke:#6d2a87}
+.sectors .secchip:nth-child(6n+6){background:#fde4e8;border-color:#e0475b;color:#9a1f31;box-shadow:0 2px 6px #e0475b33}
+.sectors .secchip:nth-child(6n+6) svg{stroke:#9a1f31}
 @keyframes sectorscroll{from{transform:translateX(0)}to{transform:translateX(-25%)}}
-@media (prefers-reduced-motion:reduce){.sectors .track{animation:none}}
+@media (prefers-reduced-motion:reduce){.sectors .sectrack{animation:none}}
 @media (max-width:1180px){.sectors{display:none}}
 .who{display:flex;align-items:center;gap:12px;font-size:13px}
 .who button{background:#fff;border:1px solid #bcc9bc;border-radius:6px;padding:4px 10px;cursor:pointer}
@@ -94,31 +94,31 @@ input[type=checkbox]{width:auto;margin-right:8px}
     <img src="{% static 'core/logo.jpg' %}" alt="" onerror="this.style.display='none'">
     <div><b>Soroti District Local Government</b><span>Production Department MIS</span><em class="tag">Better Production | Food Security | Prosperity</em></div>
   </div>
-  <div class="sectors" aria-hidden="true"><div class="track">
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
-    <div class="chip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
+  <div class="sectors" aria-hidden="true"><div class="sectrack">
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
+    <div class="secchip"><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
   </div></div>
   <div class="who">
     <span>{% now "D, j M Y" %}</span>
