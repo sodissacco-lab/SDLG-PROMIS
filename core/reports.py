@@ -264,19 +264,38 @@ def build_report(qs, period, department=None, sub_county=None, include_targets=F
     activities = []
     items = qs.select_related("department", "sub_county", "parish", "officer")
     for a in items.order_by("date", "id"):
-        place = str(a.sub_county) if a.sub_county else "Not specified"
-        if a.parish:
-            place += ", " + a.parish.name
+        if a.at_district_hq:
+            place = "District HQ"
+        else:
+            place = str(a.sub_county) if a.sub_county else "Not specified"
+            if a.parish and a.parish.name.strip().lower() != place.strip().lower():
+                place += ", " + a.parish.name
+        when = ""
+        if a.start_time:
+            when = a.start_time.strftime("%H:%M")
+            if a.end_time:
+                when += "-" + a.end_time.strftime("%H:%M")
         activities.append(
             {
                 "date": a.date.strftime("%d %b %Y"),
-                "type": a.activity_type,
+                "time": when or "-",
+                "type": a.activity_label,
                 "department": str(a.department),
                 "officer": a.officer.get_full_name() or a.officer.username,
                 "location": place,
                 "reached": a.total_beneficiaries,
             }
         )
+
+    by_type = {}
+    for t, other, m, f in qs.order_by().values_list(
+        "activity_type", "other_activity", "male", "female"
+    ):
+        name = other if (t or "").startswith("Other") and other else (t or "Not specified")
+        row = by_type.setdefault(name, {"name": name, "activities": 0, "reached": 0})
+        row["activities"] += 1
+        row["reached"] += (m or 0) + (f or 0)
+    by_type = sorted(by_type.values(), key=lambda r: r["name"])
 
     parts = []
     if department:
@@ -298,7 +317,7 @@ def build_report(qs, period, department=None, sub_county=None, include_targets=F
         "summary": summary,
         "by_department": group("department__name"),
         "by_sub_county": group("sub_county__name"),
-        "by_type": group("activity_type"),
+        "by_type": by_type,
         "breakdown": breakdown,
         "activities": activities,
         "targets": targets,
