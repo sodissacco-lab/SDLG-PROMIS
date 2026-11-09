@@ -14,6 +14,10 @@ body{font-family:system-ui,sans-serif;margin:0;background:#f1f4f1;color:#1b2b1b}
 .brand b{display:block;font-size:17px;color:#14305c}
 .brand span{font-size:14px;color:#14305c}
 .tag{font-size:12.5px;font-style:italic;color:#4a5a4a;display:block;margin-top:2px}
+.sectors{display:flex;gap:6px;align-items:center;justify-content:center;flex:1;flex-wrap:nowrap;min-width:0}
+.sectors div{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 9px;border-radius:10px;background:#eef5ef;border:1px solid #d5e3d8;color:#1f5c3a;font-size:10.5px;font-weight:600;white-space:nowrap}
+.sectors svg{width:24px;height:24px;stroke:#1f5c3a;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:1180px){.sectors{display:none}}
 .who{display:flex;align-items:center;gap:12px;font-size:13px}
 .who button{background:#fff;border:1px solid #bcc9bc;border-radius:6px;padding:4px 10px;cursor:pointer}
 .menubtn{display:none;background:#0f2a57;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:15px;font-weight:600;cursor:pointer}
@@ -73,6 +77,14 @@ input[type=checkbox]{width:auto;margin-right:8px}
   <div class="brand">
     <img src="{% static 'core/logo.jpg' %}" alt="" onerror="this.style.display='none'">
     <div><b>Soroti District Local Government</b><span>Production Department MIS</span><em class="tag">Better Production | Food Security | Prosperity</em></div>
+  </div>
+  <div class="sectors" aria-hidden="true">
+    <div><svg viewBox="0 0 48 48"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>Crops</div>
+    <div><svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/></svg>Fisheries</div>
+    <div><svg viewBox="0 0 48 48"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/></svg>Livestock</div>
+    <div><svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>Entomology</div>
+    <div><svg viewBox="0 0 48 48"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/></svg>Commercial</div>
+    <div><svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/></svg>PDM</div>
   </div>
   <div class="who">
     <span>{% now "D, j M Y" %}</span>
