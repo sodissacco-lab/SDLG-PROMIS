@@ -112,7 +112,9 @@ def _tables(data):
                 ],
             }
         )
-    tables[1:1] = extra + data.get("register_tables", [])
+    tables[1:1] = extra
+    # registers and measured results go in an annex at the end of the report
+    tables.extend(dict(t, annex=True) for t in data.get("register_tables", []))
     return tables
 
 
