@@ -1,0 +1,98 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in | SDLG-Production MIS</title>
+<style>
+:root{--g:#1f5c3a;--g2:#164429;--gold:#d9a521;--ink:#1b2b1b;--soft:#eef3ee}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--soft);min-height:100vh}
+.wrap{display:grid;grid-template-columns:1.15fr 1fr;min-height:100vh}
+.hero{background:linear-gradient(160deg,var(--g2),var(--g) 60%,#2b7a4c);color:#fff;padding:36px 40px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.05)}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{height:74px;width:auto;background:#fff;border-radius:10px;padding:4px}
+.brand b{font-size:20px;display:block;line-height:1.2}
+.brand small{opacity:.85;font-size:13px}
+.hero h1{font-size:26px;line-height:1.25;margin:28px 0 6px;font-weight:700}
+.hero p.lead{margin:0 0 22px;opacity:.9;max-width:480px;font-size:15px;line-height:1.5}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:520px;position:relative;z-index:1}
+.tile{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 8px 10px;text-align:center}
+.tile svg{width:46px;height:46px;display:block;margin:0 auto 6px}
+.tile span{font-size:13px;font-weight:600;display:block}
+.tile i{font-style:normal;font-size:11px;opacity:.8;display:block;margin-top:2px}
+.foot{font-size:12px;opacity:.8;margin-top:26px}
+.panel{display:flex;align-items:center;justify-content:center;padding:28px}
+.box{width:100%;max-width:380px;background:#fff;border:1px solid #dde5dd;border-radius:16px;padding:26px;box-shadow:0 6px 24px rgba(20,60,35,.08)}
+.box .arms{display:block;height:84px;margin:0 auto 10px}
+.box h2{margin:0 0 2px;font-size:20px;text-align:center}
+.box p.sub{margin:0 0 16px;text-align:center;font-size:13px;color:#5a6b5a}
+label{font-size:13px;color:#445544;font-weight:600}
+input{width:100%;padding:11px;margin:4px 0 14px;border:1px solid #bcc9bc;border-radius:9px;font-size:15px}
+input:focus{outline:2px solid #8fc7a5;border-color:var(--g)}
+.btn{width:100%;background:var(--g);color:#fff;border:0;border-radius:9px;padding:12px;font-size:16px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--g2)}
+.err{color:#b00020;font-size:14px;text-align:center;margin:0 0 10px}
+@media(max-width:820px){
+  .wrap{grid-template-columns:1fr}
+  .hero{padding:22px 18px}
+  .hero h1{font-size:21px;margin-top:18px}
+  .tiles{grid-template-columns:repeat(3,1fr);gap:8px}
+  .tile svg{width:36px;height:36px}
+  .foot{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <div class="brand">
+        <img src="{% static 'core/letterhead_arms.png' %}" alt="Coat of arms">
+        <img src="{% static 'core/letterhead_district.jpeg' %}" alt="Soroti District Local Government">
+        <div><b>SDLG-Production MIS</b><small>Soroti District Local Government</small></div>
+      </div>
+      <h1>One department. Six ways of feeding and growing Teso.</h1>
+      <p class="lead">Record, review and report production work across the district, from the garden to the lake, the kraal and the market.</p>
+      <div class="tiles">
+        <div class="tile">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M24 42V20"/><path d="M24 30c-7 0-11-4-11-10 7 0 11 4 11 10z"/><path d="M24 24c7 0 11-4 11-10-7 0-11 4-11 10z"/><path d="M10 42h28"/></svg>
+          <span>Crops</span><i>Gardens and seed</i></div>
+        <div class="tile">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 24c6-9 18-12 28-4l8-6v20l-8-6c-10 8-22 5-28-4z"/><circle cx="14" cy="23" r="1.6" fill="#fff"/></svg>
+          <span>Fisheries</span><i>Lakes and ponds</i></div>
+        <div class="tile">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 18c-2-4 0-8 4-8 3 0 4 2 5 4 4 0 8 1 11 1 6 0 9 3 9 8v10h-4v-8h-4v8h-4v-8H18v8h-4V26c-4-1-5-4-6-8z"/><circle cx="12" cy="17" r="1.2" fill="#fff"/></svg>
+          <span>Livestock</span><i>Animal health</i></div>
+        <div class="tile">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="24" cy="28" rx="9" ry="11"/><path d="M15 25h18M15 31h18"/><path d="M19 18c-5-6-11-5-12 0 1 4 7 5 12 3M29 18c5-6 11-5 12 0-1 4-7 5-12 3"/></svg>
+          <span>Entomology</span><i>Bees and silk</i></div>
+        <div class="tile">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20l3-10h26l3 10"/><path d="M8 20c0 3 3 4 5.3 4S18 23 18 20c0 3 3 4 6 4s6-1 6-4c0 3 2.7 4 4.7 4S40 23 40 20"/><path d="M11 25v15h26V25"/><path d="M20 40V31h8v9"/></svg>
+          <span>Commercial</span><i>Trade and industry</i></div>
+        <div class="tile">
+          <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="15" r="5"/><circle cx="11" cy="19" r="4"/><circle cx="37" cy="19" r="4"/><path d="M14 38c0-6 4-10 10-10s10 4 10 10"/><path d="M3 36c0-4 3-7 7-7M45 36c0-4-3-7-7-7"/></svg>
+          <span>PDM</span><i>Households and groups</i></div>
+      </div>
+    </div>
+    <div class="foot">Production Department, Soroti District Local Government</div>
+  </section>
+
+  <section class="panel">
+    <div class="box">
+      <h2>Sign in</h2>
+      <p class="sub">Use your SDLG-Production MIS account</p>
+      {% if form.errors %}<p class="err">Wrong username or password.</p>{% endif %}
+      <form method="post">{% csrf_token %}
+        <label>Username</label>
+        {{ form.username }}
+        <label>Password</label>
+        {{ form.password }}
+        <button class="btn" type="submit">Sign in</button>
+      </form>
+    </div>
+  </section>
+</div>
+</body>
+</html>
