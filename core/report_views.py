@@ -87,12 +87,8 @@ def _prepare(request):
     if not data["photos"]:
         data["photo_note"] = (
             "Photographs: %s on record for approved activities in this period; "
-            "%s image file(s) could not be found on the server."
+            "%s image file(s) were lost from the server and need to be uploaded again."
             % (st.get("total", 0), st.get("missing", 0) + st.get("bad", 0))
-        )
-        data["photo_note"] += (
-            " [Storage folder: %s | exists: %s | files in it: %s | first missing file: %s]"
-            % (st.get("root"), st.get("root_exists"), st.get("root_files"), st.get("example", "-"))
         )
     if user.is_superuser or user.role in DISTRICT_ROLES:
         rtables = register_tables(period, department, sub_county) + more_register_tables(period, department, sub_county)
