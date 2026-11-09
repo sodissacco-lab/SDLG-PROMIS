@@ -9,6 +9,7 @@ from django.utils import timezone
 from .exports import build_tables, make_docx, make_pdf
 from .models import Department, SubCounty
 from .report_photos import collect_photos
+from .narrative_registers import keep_nonzero
 from .report_registers import register_tables; from .report_registers_more import more_register_tables
 from .reports import (
     KINDS,
@@ -80,9 +81,14 @@ def _prepare(request):
     )
     data = build_report(base, period, department, sub_county, include_targets)
     data["sector_line"] = sector_line(department, sub_county)
+    data["prepared_by"] = user.get_full_name() or user.username
     data["photos"] = collect_photos(base, period, department, sub_county)
     if user.is_superuser or user.role in DISTRICT_ROLES:
-        data["register_tables"] = register_tables(period, department, sub_county) + more_register_tables(period, department, sub_county)
+        rtables = register_tables(period, department, sub_county) + more_register_tables(period, department, sub_county)
+        # leave out registers with nothing in them
+        data["register_tables"] = [
+            dict(t, rows=keep_nonzero(t["rows"])) for t in rtables if keep_nonzero(t["rows"])
+        ]
     else:
         data["register_tables"] = []
     return form, department, sub_county, data
