@@ -17,6 +17,15 @@ from .ent_com_models import (
 from .report_registers import _in, _row, _sum
 
 
+
+def _has_value(row):
+    """True when a measured result is not zero, so empty results stay out of reports."""
+    try:
+        return float(str(row[1]).replace(",", "").strip() or 0) != 0
+    except ValueError:
+        return True
+
+
 def more_register_tables(period, department=None, sub_county=None):
     start, end = period["start"], period["end"]
     name = department.name if department else None
@@ -72,6 +81,7 @@ def more_register_tables(period, department=None, sub_county=None):
             "header": ["Register", "Registered to date", "New in the period", "Active now"],
             "rows": rows,
         })
+    measured = [r for r in measured if _has_value(r)]
     if measured:
         tables.append({
             "title": "Measured results: Entomology and Commercial",

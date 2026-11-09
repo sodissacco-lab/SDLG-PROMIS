@@ -34,6 +34,15 @@ from .reg_models import (
 )
 
 
+
+def _has_value(row):
+    """True when a measured result is not zero, so empty results stay out of reports."""
+    try:
+        return float(str(row[1]).replace(",", "").strip() or 0) != 0
+    except ValueError:
+        return True
+
+
 def _row(label, qs, start, end, active=None):
     return [
         label,
@@ -133,6 +142,7 @@ def register_tables(period, department=None, sub_county=None):
                 "rows": rows,
             }
         )
+    measured = [r for r in measured if _has_value(r)]
     if measured:
         tables.append(
             {"title": "Measured results in the period", "header": ["Indicator", "Total"], "rows": measured}
