@@ -53,6 +53,12 @@
     </form>
   </div>
 
+  <div class="box"><h2>Backup to Google Drive</h2>
+    {% if backup_ready %}<p style="font-size:13px;margin:0 0 6px">A full backup of all records is saved to your Google Drive every day when the timer runs.</p>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="backup"><button class="b" type="submit">Back up now</button></form>
+    {% else %}<div class="warn">Backup is not set up yet. Add BACKUP_SCRIPT_URL and BACKUP_SECRET in Render (steps given by your assistant).</div>{% endif %}
+  </div>
+
   <div class="box"><h2>Daily timer address</h2>
     <p style="font-size:13px;margin:0">cron-job.org should open this address once a day, replacing YOUR_CRON_TOKEN with the CRON_TOKEN you set in Render:</p>
     <p style="font-size:13px;word-break:break-all"><b>{{ cron_url }}</b></p>
