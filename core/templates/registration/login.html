@@ -83,7 +83,7 @@ input:focus{outline:2px solid #8fc7a5;border-color:var(--g)}
     <div class="box">
       <h2>Sign in</h2>
       <p class="sub">Use your SDLG-Production MIS account</p>
-      {% if form.errors %}<p class="err">Wrong username or password.</p>{% endif %}
+      {% if lock_message %}<p class="err">{{ lock_message }}</p>{% elif form.errors %}<p class="err">Wrong username or password.</p>{% endif %}
       <form method="post">{% csrf_token %}
         <label>Username</label>
         {{ form.username }}
@@ -91,6 +91,7 @@ input:focus{outline:2px solid #8fc7a5;border-color:var(--g)}
         {{ form.password }}
         <button class="btn" type="submit">Sign in</button>
       </form>
+      <p style="text-align:center;margin:12px 0 0;font-size:14px"><a href="{% url 'forgot_password' %}" style="color:#1f5c3a">Forgot password?</a></p>
     </div>
   </section>
 </div>
