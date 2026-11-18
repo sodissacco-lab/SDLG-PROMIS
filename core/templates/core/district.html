@@ -54,7 +54,7 @@
 {% endblock %}
 {% block content %}
 <h1>District dashboard</h1>
-<p class="sub">Overview of Production Department activities and key indicators (approved activities)</p>
+<p class="sub">{% if scope_department %}{{ scope_department.name }} sector: activities by you and the staff under you (approved activities){% else %}Overview of Production Department activities and key indicators (approved activities){% endif %}</p>
 <div class="nav">
   <a href="?{{ prev_query }}">&larr; Previous</a>
   <b>{{ period }}</b>
@@ -72,7 +72,7 @@
   {% endfor %}
 </div>
 
-{% load register_tags %}{% district_registers %}<div class="panels">
+{% load register_tags %}{% if scope_department %}{% register_panel scope_department %}{% else %}{% district_registers %}{% endif %}<div class="panels">
   <div class="panel">
     <h2>Activities by category</h2>
     <div class="donutwrap">
