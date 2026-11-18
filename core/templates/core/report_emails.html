@@ -1,0 +1,67 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  .rem{max-width:760px}
+  .rem h1{margin:0 0 4px;font-size:22px}
+  .rem .box{background:#fff;border:1px solid #dde5dd;border-radius:12px;padding:14px 16px;margin:12px 0}
+  .rem h2{margin:0 0 8px;font-size:16px;color:#1f5c3a}
+  .rem label{display:block;font-size:13px;font-weight:600;margin:8px 0 3px}
+  .rem input[type=text],.rem input[type=email],.rem input[type=number],.rem select{width:100%;box-sizing:border-box;padding:9px;border:1px solid #bcc9bc;border-radius:8px;font-size:15px}
+  .rem .b{background:#1f5c3a;color:#fff;border:0;border-radius:8px;padding:9px 14px;font-size:14px;cursor:pointer;margin-top:10px}
+  .rem .b.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .rem .warn{background:#fff4e5;border:1px solid #f0c27a;padding:8px 12px;border-radius:8px;font-size:13px;margin:8px 0}
+  .rem .ok{color:#1f7a3a}.rem .bad{color:#b00020}
+  .rem table{width:100%;border-collapse:collapse;font-size:13px}
+  .rem td,.rem th{text-align:left;padding:6px 4px;border-bottom:1px solid #eef2ee}
+  .rem .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+<div class="rem">
+  <h1>Report emails</h1>
+  <p style="color:#5b6b5b;font-size:14px;margin:0">The system e-mails the consolidated monthly and quarterly reports to the District Production Officer, sends each sector's quarterly report, and reminds him to send the quarterly report to the Ministry headquarters.</p>
+  {% if not mail_ready %}<div class="warn">E-mail is not connected yet (BREVO_API_KEY and MAIL_FROM are missing in Render).</div>{% endif %}
+  {% if not token_set %}<div class="warn">The daily timer is not set up yet. Add CRON_TOKEN in Render, then set up cron-job.org (steps given by your assistant). Until then you can use the Send now buttons below.</div>{% endif %}
+
+  <div class="box"><h2>Who receives the reports</h2>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="save">
+      <label>District Production Officer's email</label>
+      <input type="email" name="dpo_email" value="{{ cfg.dpo_email }}" placeholder="dpo@example.com">
+      <label>Copy to (optional, separate with commas)</label>
+      <input type="text" name="cc_emails" value="{{ cfg.cc_emails }}">
+      <label>Remind about the Ministry copy every (days)</label>
+      <input type="number" name="remind_every_days" min="1" value="{{ cfg.remind_every_days }}">
+      <label style="font-weight:400"><input type="checkbox" name="auto_enabled" {% if cfg.auto_enabled %}checked{% endif %}> Send automatically (monthly, in the first 15 days of the next month; quarterly, in the first month of the next quarter)</label>
+      <button class="b" type="submit">Save</button>
+    </form>
+    <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="test"><button class="b alt" type="submit">Send a test email</button></form>
+    {% if effective_to %}<p style="font-size:13px;color:#5b6b5b">Reports go to: {{ effective_to }}</p>{% endif %}
+  </div>
+
+  <div class="box"><h2>Send now</h2>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="send_monthly">
+      <div class="row2"><div><label>Month</label><select name="month">{% for m in months %}<option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>{% endfor %}</select></div>
+      <div><label>Year</label><input type="number" name="year" value="{{ year }}"></div></div>
+      <button class="b" type="submit">Email the monthly report</button>
+    </form>
+    <form method="post" style="margin-top:12px">{% csrf_token %}<input type="hidden" name="action" value="send_quarterly">
+      <div class="row2"><div><label>Financial year starts (e.g. 2026 for 2026/27)</label><input type="number" name="fy" value="{{ fy }}"></div>
+      <div><label>Quarter (1 = Jul-Sep ... 4 = Apr-Jun)</label><input type="number" name="quarter" min="1" max="4" value="{{ quarter }}"></div></div>
+      <button class="b" type="submit">Email the quarterly report and sector reports</button>
+    </form>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="ministry">
+      <div class="row2"><div><label>FY start</label><input type="number" name="fy" value="{{ fy }}"></div><div><label>Quarter</label><input type="number" name="quarter" min="1" max="4" value="{{ quarter }}"></div></div>
+      <button class="b alt" type="submit">Mark as sent to Ministry</button>
+    </form>
+  </div>
+
+  <div class="box"><h2>Daily timer address</h2>
+    <p style="font-size:13px;margin:0">cron-job.org should open this address once a day, replacing YOUR_CRON_TOKEN with the CRON_TOKEN you set in Render:</p>
+    <p style="font-size:13px;word-break:break-all"><b>{{ cron_url }}</b></p>
+  </div>
+
+  <div class="box"><h2>What has been sent</h2>
+    <table><tr><th>When</th><th>What</th><th>Result</th></tr>
+    {% for l in log %}<tr><td>{{ l.sent_at|date:"d M Y H:i" }}</td><td>{{ l.kind }}: {{ l.label }}</td><td>{% if l.ok %}<span class="ok">sent</span>{% else %}<span class="bad">failed</span>{% endif %} {{ l.note }}</td></tr>
+    {% empty %}<tr><td colspan="3">Nothing sent yet.</td></tr>{% endfor %}</table>
+  </div>
+</div>
+{% endblock %}
