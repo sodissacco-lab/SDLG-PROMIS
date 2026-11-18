@@ -1,0 +1,32 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  .dlp h1{margin:0 0 4px;font-size:22px}
+  .dlp .sub{color:#5b6b5b;margin:0 0 16px;font-size:14px}
+  .dlp .grp{background:#fff;border:1px solid #dde5dd;border-radius:12px;padding:14px 16px;margin-bottom:14px}
+  .dlp .grp h2{margin:0 0 8px;font-size:16px;color:#1f5c3a}
+  .dlp .row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eef2ee;flex-wrap:wrap}
+  .dlp .row:last-child{border-bottom:0}
+  .dlp .row a.nm{color:#17301f;text-decoration:none;font-weight:600}
+  .dlp .acts a{display:inline-block;padding:6px 12px;border-radius:8px;font-size:13px;text-decoration:none;margin-left:6px;border:1px solid #1f5c3a;color:#1f5c3a;background:#fff}
+  .dlp .acts a.x{background:#1f5c3a;color:#fff}
+</style>
+<div class="dlp">
+  <h1>Download registers</h1>
+  <p class="sub">Excel or CSV copies of the registers you are allowed to see. Each download includes every record, not just one page.</p>
+  {% if reviewer %}
+  <div class="grp"><h2>Daily Activity Register</h2>
+    <div class="row"><a class="nm" href="{% url 'sector_activities' %}">Sector activities</a>
+      <span class="acts"><a href="{% url 'sector_activities' %}?format=csv">CSV</a></span></div>
+  </div>
+  {% endif %}
+  {% for name, items in groups %}
+  <div class="grp"><h2>{{ name }}</h2>
+    {% for i in items %}
+    <div class="row"><a class="nm" href="/r/{{ i.key }}/">{{ i.label }}</a>
+      <span class="acts"><a class="x" href="{% url 'reg_export' i.key %}">Excel</a><a href="{% url 'reg_export' i.key %}?format=csv">CSV</a></span></div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
