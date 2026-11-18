@@ -58,6 +58,9 @@ def report_emails(request):
         elif act == "send_quarterly":
             res = send_quarterly(_int(request.POST.get("fy"), fiscal_year_of(today)), _int(request.POST.get("quarter"), quarter_of(today)), force=True)
             messages.info(request, "Quarterly reports: %s" % res)
+        elif act == "backup":
+            from .backup_drive import run_backup
+            messages.info(request, "Backup: %s" % run_backup(force=True))
         elif act == "ministry":
             ministry_ack(_int(request.POST.get("fy"), fiscal_year_of(today)), _int(request.POST.get("quarter"), quarter_of(today)))
             messages.success(request, "Marked as sent to the Ministry. Reminders for that quarter will stop.")
@@ -68,6 +71,7 @@ def report_emails(request):
         "cfg": cfg,
         "log": ReportSendLog.objects.all()[:25],
         "mail_ready": is_configured(),
+        "backup_ready": __import__("core.backup_drive", fromlist=["x"]).is_configured(),
         "token_set": token_set,
         "cron_url": "%s/cron/run/YOUR_CRON_TOKEN/" % site_url(),
         "effective_to": ", ".join(to),
