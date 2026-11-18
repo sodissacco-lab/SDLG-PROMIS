@@ -2,6 +2,7 @@ from django.urls import include, path
 
 from . import (
     api,
+    auth_views,
     district_views,
     narrative_views,
     pack_views,
@@ -26,6 +27,11 @@ urlpatterns = [
     path("activity/<int:pk>/edit/", views.activity_edit, name="activity_edit"),
     path("activity/<int:pk>/review/", views.activity_review, name="activity_review"),
     path("review/", views.review_queue, name="review_queue"),
+    path("account/forgot-password/", auth_views.ForgotPasswordView.as_view(), name="forgot_password"),
+    path("account/forgot-password/sent/", auth_views.ForgotPasswordDoneView.as_view(), name="forgot_password_done"),
+    path("account/reset/<uidb64>/<token>/", auth_views.ResetConfirmView.as_view(), name="reset_confirm"),
+    path("account/reset/done/", auth_views.ResetCompleteView.as_view(), name="reset_complete"),
+    path("account/change-password/", auth_views.ChangePasswordView.as_view(), name="password_change"),
     path("sector-activities/", sector_activity_views.sector_activities, name="sector_activities"),
     path("photos/<int:pk>/", photo_views.photo_file, name="photo_file"),
     path("photos/<int:pk>/delete/", photo_views.photo_delete, name="photo_delete"),
