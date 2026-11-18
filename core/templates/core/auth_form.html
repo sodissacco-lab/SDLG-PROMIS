@@ -1,0 +1,32 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} | SDLG-Production MIS</title>
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#eef3ee;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1b2b1b}
+.box{width:100%;max-width:400px;margin:16px;background:#fff;border:1px solid #dde5dd;border-radius:16px;padding:26px;box-shadow:0 6px 24px rgba(20,60,35,.08)}
+.logo{display:block;height:64px;margin:0 auto 10px}
+h1{font-size:20px;text-align:center;margin:0 0 6px}
+p.i{font-size:13px;color:#5a6b5a;text-align:center;margin:0 0 14px}
+label{font-size:13px;font-weight:600;color:#445544}
+input{width:100%;box-sizing:border-box;padding:11px;margin:4px 0 12px;border:1px solid #bcc9bc;border-radius:9px;font-size:15px}
+.btn{width:100%;background:#1f5c3a;color:#fff;border:0;border-radius:9px;padding:12px;font-size:16px;font-weight:600;cursor:pointer}
+.errorlist{color:#b00020;font-size:13px;margin:0 0 6px;padding-left:18px}
+.helptext,form ul{font-size:12px;color:#5a6b5a}
+a{color:#1f5c3a}
+.back{text-align:center;margin-top:14px;font-size:14px}
+</style></head><body>
+<div class="box">
+  <img class="logo" src="{% static 'core/letterhead_arms.png' %}" alt="">
+  <h1>{{ title }}</h1>
+  {% if intro %}<p class="i">{{ intro }}</p>{% endif %}
+  {% if validlink == False %}
+    <p class="i">This reset link is not valid any more. Please ask for a new one.</p>
+    <p class="back"><a href="{% url 'forgot_password' %}">Send a new reset link</a></p>
+  {% else %}
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">{{ button }}</button>
+  </form>
+  <p class="back"><a href="{% url 'login' %}">Back to sign in</a></p>
+  {% endif %}
+</div></body></html>
