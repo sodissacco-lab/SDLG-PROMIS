@@ -46,6 +46,8 @@
 
 <div class="dl">
   {% if can_add %}<a class="btn" href="{% url 'reg_new' cfg.key %}">+ New {{ cfg.singular }}</a>{% endif %}
+  <a class="btn alt" href="{% url 'reg_export' cfg.key %}?{{ params }}">Download Excel</a>
+  <a class="btn alt" href="{% url 'reg_export' cfg.key %}?{{ params }}&amp;format=csv">CSV</a>
   <a class="btn alt" href="{% url 'dashboard' %}">Back to home</a>
 </div>
 
