@@ -3,7 +3,15 @@ import importlib
 from django.contrib import admin
 from django.urls import include, path
 
-urlpatterns = [
+urlpatterns = []
+try:  # sign-in page that slows down password guessing
+    from core.auth_views import ThrottledLoginView
+
+    urlpatterns.append(path("accounts/login/", ThrottledLoginView.as_view(), name="login"))
+except Exception:
+    pass
+
+urlpatterns += [
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
     path("manage/", include("core.admin_urls")),
