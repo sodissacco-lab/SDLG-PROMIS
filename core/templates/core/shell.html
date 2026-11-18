@@ -138,6 +138,7 @@ input[type=checkbox]{width:auto;margin-right:8px}
       <summary>Daily Activity Register</summary>
       <a class="sublink {% if u == 'activity_new' %}on{% endif %}" href="{% url 'activity_new' %}">New activity</a>
       <a class="sublink {% if u == 'activity_list' or u == 'activity_edit' or u == 'activity_detail' %}on{% endif %}" href="{% url 'activity_list' %}">My activities</a>
+      {% if nav_reviewer %}<a class="sublink {% if u == 'sector_activities' %}on{% endif %}" href="{% url 'sector_activities' %}">Sector activities</a>{% endif %}
     </details>
     <a class="{% if nav_cur_slug == 'work-plans' %}on{% endif %}" href="{% url 'workplan' %}">Work Plans &amp; Targets</a>
     <details {% if u == 'report' or u == 'narrative' %}open{% endif %}>
