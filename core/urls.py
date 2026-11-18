@@ -11,6 +11,7 @@ from . import (
     photo_views,
     reg_views,
     register_export,
+    schedule_views,
     register_views,
     report_views,
     sector_activity_views,
@@ -74,6 +75,8 @@ for _key in CONFIGS:
 
 urlpatterns += [
     path("downloads/", register_export.downloads, name="downloads"),
+    path("report-emails/", schedule_views.report_emails, name="report_emails"),
+    path("cron/run/<str:token>/", schedule_views.cron_run, name="cron_run"),
     path("r/<slug:key>/export/", register_export.register_export, name="reg_export"),
     path("r/<slug:key>/new/", reg_views.reg_new, name="reg_new"),
     path("r/<slug:key>/<int:pk>/", reg_views.reg_detail, name="reg_detail"),
