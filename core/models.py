@@ -196,3 +196,4 @@ from . import admin2_models  # noqa: E402,F401
 from . import permit_models  # noqa: E402,F401
 from . import pwa_models  # noqa: E402,F401
 from . import auth_models  # noqa: E402,F401
+from . import schedule_models  # noqa: E402,F401
