@@ -61,6 +61,9 @@ def _parse(request):
     sub_county = SubCounty.objects.filter(
         pk=_int(get.get("sub_county"), 0)
     ).first()
+    u = request.user
+    if not u.is_superuser and u.role == "head" and u.department_id:
+        department = u.department  # a sector head reports on his own sector only
     form = {
         "kind": kind,
         "day": day.isoformat(),
