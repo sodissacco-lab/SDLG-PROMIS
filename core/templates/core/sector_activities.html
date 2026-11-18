@@ -1,0 +1,76 @@
+{% extends "core/shell.html" %}
+{% block content %}
+<style>
+  .sa-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:0 0 12px}
+  .sa-filters label{font-size:12px;color:#4a5a4a;display:block;margin-bottom:2px}
+  .sa-filters select,.sa-filters input{padding:7px;border:1px solid #bcc9bc;border-radius:8px;font-size:14px;background:#fff}
+  .sa-btn{padding:8px 14px;border-radius:8px;border:0;background:#1f5c3a;color:#fff;font-size:14px;cursor:pointer;text-decoration:none;display:inline-block}
+  .sa-btn.alt{background:#fff;color:#1f5c3a;border:1px solid #1f5c3a}
+  .sa-sum{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 10px;font-size:14px}
+  .sa-sum b{font-size:18px}
+  .sa-tbl{overflow-x:auto;background:#fff;border:1px solid #dde5dd;border-radius:12px}
+  .sa-tbl table{width:100%;border-collapse:collapse;font-size:13px}
+  .sa-tbl th,.sa-tbl td{text-align:left;padding:8px;border-bottom:1px solid #e6ece6;vertical-align:top}
+  .sa-tbl th{background:#f5f8f5;color:#4a5a4a}
+  .sa-tbl td.n{text-align:right}
+  .sa-badge{font-size:12px;padding:2px 8px;border-radius:10px;background:#e6ece6;white-space:nowrap}
+  .sa-badge.submitted{background:#fff3cd}.sa-badge.approved{background:#d4edda}.sa-badge.returned{background:#f8d7da}
+  .sa-pager{display:flex;gap:12px;align-items:center;margin:12px 0;font-size:14px}
+  @media print{.sa-filters,.sa-pager,.sa-noprint{display:none}}
+</style>
+<h2 style="margin-top:0">{{ title }}</h2>
+<p class="sub" style="color:#5a6b5a;margin:0 0 12px;font-size:14px">Submitted, approved and returned entries by every officer in scope. Drafts stay private to the officer until submitted.</p>
+
+<form class="sa-filters" method="get">
+  <div><label>Month</label>
+    <input type="month" name="month" value="{{ month_value }}" {% if all_months %}disabled{% endif %}>
+  </div>
+  <div><label>&nbsp;</label>
+    <label style="display:inline-flex;gap:4px;align-items:center;font-size:13px;color:#1b2b1b">
+      <input type="checkbox" name="month" value="all" {% if all_months %}checked{% endif %} onchange="this.form.submit()"> All months</label>
+  </div>
+  <div><label>Officer</label>
+    <select name="officer"><option value="">All officers</option>
+      {% for o in officers %}<option value="{{ o.pk }}" {% if f_officer == o.pk|stringformat:"s" %}selected{% endif %}>{{ o.get_full_name|default:o.username }}</option>{% endfor %}
+    </select></div>
+  <div><label>Status</label>
+    <select name="status"><option value="">All</option>
+      {% for v, l in statuses %}<option value="{{ v }}" {% if f_status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select></div>
+  <div><label>Activity type</label>
+    <select name="type"><option value="">All types</option>
+      {% for t in types %}<option value="{{ t }}" {% if f_type == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select></div>
+  <div><button class="sa-btn" type="submit">Show</button></div>
+  <div class="sa-noprint"><a class="sa-btn alt" href="?{{ query }}{% if query %}&{% endif %}format=csv">Download CSV</a>
+    <a class="sa-btn alt" href="#" onclick="window.print();return false">Print</a></div>
+</form>
+
+<div class="sa-sum"><span><b>{{ count }}</b> activities</span><span><b>{{ people }}</b> people reached</span></div>
+
+<div class="sa-tbl">
+  <table>
+    <tr><th>Date</th><th>Officer</th><th>Activity</th><th>Place</th><th class="n">People</th><th>Status</th></tr>
+    {% for a in page %}
+    <tr>
+      <td>{{ a.date|date:"d M Y" }}</td>
+      <td>{{ a.officer.get_full_name|default:a.officer.username }}</td>
+      <td><a href="{% url 'activity_detail' a.pk %}">{{ a.activity_label }}</a><br><small>{{ a.department }}</small></td>
+      <td>{% if a.at_district_hq %}District HQ{% else %}{{ a.sub_county }}{% if a.parish %}, {{ a.parish.name }}{% endif %}{% endif %}</td>
+      <td class="n">{{ a.male|add:a.female }}</td>
+      <td><span class="sa-badge {{ a.status }}">{{ a.get_status_display }}</span></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">No activities match these filters.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+{% if page.paginator.num_pages > 1 %}
+<div class="sa-pager">
+  {% if page.has_previous %}<a href="?{{ query }}{% if query %}&{% endif %}page={{ page.previous_page_number }}">&larr; Newer</a>{% endif %}
+  <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a href="?{{ query }}{% if query %}&{% endif %}page={{ page.next_page_number }}">Older &rarr;</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}
