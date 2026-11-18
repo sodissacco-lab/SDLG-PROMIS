@@ -125,6 +125,8 @@ def district(request):
         year = today.year
 
     base = visible_activities(user)
+    # A sector head sees only his own sector (and the staff under him).
+    scope = user.department if (not user.is_superuser and user.role == "head" and user.department_id) else None
     approved = base.filter(status="approved")
     month_qs = approved.filter(date__year=year, date__month=month)
     prev_y, prev_m = _shift(year, month, 1)
@@ -179,7 +181,21 @@ def district(request):
         },
     ]
 
-    by_department = _group(month_qs, "department__name")
+    if scope is not None:
+        sector_only = {
+            "PDM beneficiaries trained": "PDM",
+            "Fish farmers reached": "Fisheries",
+            "Fisheries inspections": "Fisheries",
+            "Crop activities": "Crops",
+            "Veterinary activities": "Veterinary",
+        }
+        indicator_tiles = [
+            t for t in indicator_tiles
+            if t["label"] not in sector_only
+            or sector_only[t["label"]].lower() in scope.name.lower()
+        ]
+
+    by_department = _group(month_qs, "activity_type" if scope is not None else "department__name")
     donut_total, donut_gradient = _donut(by_department)
 
     series = []
@@ -240,7 +256,8 @@ def district(request):
         "recent": month_qs.select_related(
             "department", "sub_county", "parish", "officer"
         )[:8],
-        "departments": Department.objects.order_by("name"),
+        "departments": Department.objects.filter(pk=scope.pk) if scope is not None else Department.objects.order_by("name"),
+        "scope_department": scope,
         "pending": pending,
         "is_reviewer": user.is_superuser or user.role in ("admin", "dpo", "head"),
         "can_admin": user.is_staff,
