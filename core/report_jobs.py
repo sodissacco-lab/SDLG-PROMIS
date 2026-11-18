@@ -143,9 +143,12 @@ def run_due(today=None):
     """Runs everything that is due today. Safe to call every day."""
     today = today or date.today()
     cfg = ReportSettings.get()
-    if not cfg.auto_enabled:
-        return ["automatic sending is switched off"]
     out = []
+    from .backup_drive import is_configured as backup_ready, run_backup
+    if backup_ready():
+        out.append("backup: %s" % run_backup())
+    if not cfg.auto_enabled:
+        return out + ["automatic report sending is switched off"]
     first_this_month = today.replace(day=1)
     if today.day <= MONTHLY_WINDOW_DAYS:
         last = first_this_month - timedelta(days=1)
