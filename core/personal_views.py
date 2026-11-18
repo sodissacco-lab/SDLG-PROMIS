@@ -138,7 +138,8 @@ def my_dashboard(request):
     ]
 
     district_staff = user.is_superuser or user.role in DISTRICT_ROLES
-    if district_staff:
+    is_head = (not user.is_superuser) and user.role == "head" and bool(user.department_id)
+    if district_staff and not is_head:
         by_department = _group(month_qs, "department__name")
         donut_title = "Activities by sector"
     else:
@@ -171,14 +172,14 @@ def my_dashboard(request):
     sub_rows = _group(month_qs, "sub_county__name")[:8]
     trend_max = max([max(s["activities"], s["extension"]) for s in series] or [0])
     sub_max = max([r["activities"] for r in sub_rows] or [0])
-    own_dept = None if district_staff else user_obj(user, "department", Department)
+    own_dept = None if (district_staff and not is_head) else user_obj(user, "department", Department)
     quick_departments = Department.objects.order_by("name")
     if own_dept:
         quick_departments = quick_departments.filter(pk=own_dept.pk)
 
     context = {
         "active": "mine",
-        "show_category": district_staff,
+        "show_category": district_staff and not is_head,
         "sub_max": sub_max,
         "trend_max": trend_max,
         "period": "%s %s" % (calendar.month_name[month], year),
