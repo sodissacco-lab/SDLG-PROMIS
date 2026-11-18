@@ -10,6 +10,7 @@ from . import (
     personal_views,
     photo_views,
     reg_views,
+    register_export,
     register_views,
     report_views,
     sector_activity_views,
@@ -72,6 +73,8 @@ for _key in CONFIGS:
     )
 
 urlpatterns += [
+    path("downloads/", register_export.downloads, name="downloads"),
+    path("r/<slug:key>/export/", register_export.register_export, name="reg_export"),
     path("r/<slug:key>/new/", reg_views.reg_new, name="reg_new"),
     path("r/<slug:key>/<int:pk>/", reg_views.reg_detail, name="reg_detail"),
     path("r/<slug:key>/<int:pk>/edit/", reg_views.reg_edit, name="reg_edit"),
