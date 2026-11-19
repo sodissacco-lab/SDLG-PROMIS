@@ -17,7 +17,7 @@ def visible_activities(user):
         return qs
     if user.role == "head" and user.department_id:
         return qs.filter(department=user.department)
-    return _own_or_subcounty(user, qs)
+    return _own_or_subcounty(user, qs) | qs.filter(officer__supervisor=user)
 
 
 def reviewable_activities(user):
@@ -27,12 +27,19 @@ def reviewable_activities(user):
     if user.role == "dpo":
         return qs.exclude(officer=user)
     if user.role == "head" and user.department_id:
-        return qs.filter(department=user.department).exclude(officer=user)
-    return qs.none()
+        from django.db.models import Q
+        return qs.filter(
+            Q(department=user.department) | Q(officer__supervisor=user)
+        ).exclude(officer=user)
+    return qs.filter(officer__supervisor=user).exclude(officer=user)
 
 
 def is_reviewer(user):
-    return user.is_superuser or user.role in ("admin", "dpo", "head")
+    return (
+        user.is_superuser
+        or user.role in ("admin", "dpo", "head")
+        or user.reports.exists()
+    )
 
 
 def types_by_department():
