@@ -52,7 +52,7 @@ def _date_widgets(field, **kwargs):
 
 _names = {f.name for f in User._meta.get_fields()}
 USER_FIELDS = [f for f in ["username", "first_name", "last_name", "email", "role",
-                           "department", "sub_county", "phone", "is_active"] if f in _names]
+                           "department", "sub_county", "phone", "supervisor", "is_active"] if f in _names]
 
 
 class UserForm(forms.ModelForm):
@@ -110,7 +110,7 @@ PAGES = {
         model=User, title="Users & accounts", single="user", access="manager", delete=False, form=UserForm,
         cols=_cols(User, [("Username", "username"), ("Name", "get_full_name"), ("Role", "role"),
                           ("Department", "department"), ("Sub-county", "sub_county"),
-                          ("Phone", "phone"), ("Active", "is_active")]),
+                          ("Phone", "phone"), ("Supervisor", "supervisor"), ("Active", "is_active")]),
         search=["username", "first_name", "last_name"],
         filters=[f for f in ["role", "department", "sub_county"] if f in _names],
     ),
