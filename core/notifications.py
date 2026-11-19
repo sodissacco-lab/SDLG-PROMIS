@@ -34,7 +34,7 @@ def collect(user):
         add("Your work", "info", "%d drafts have been waiting more than 3 days. Finish and submit them." % drafts,
             reverse("activity_list") + "?status=draft")
 
-    if user.is_superuser or user.role in ("admin", "dpo", "head"):
+    if user.is_superuser or user.role in ("admin", "dpo", "head") or user.reports.exists():
         pending = reviewable_activities(user).count()
         if pending:
             add("Approvals", "warning", "%d entries are waiting for your review." % pending, reverse("review_queue"))
