@@ -58,6 +58,23 @@ def report_emails(request):
         elif act == "send_quarterly":
             res = send_quarterly(_int(request.POST.get("fy"), fiscal_year_of(today)), _int(request.POST.get("quarter"), quarter_of(today)), force=True)
             messages.info(request, "Quarterly reports: %s" % res)
+        elif act == "approval":
+            want = request.POST.get("require_approval") == "on"
+            was = cfg.require_approval
+            cfg.require_approval = want
+            cfg.save()
+            if was and not want:
+                from django.utils import timezone
+
+                from .models import Activity
+
+                n = Activity.objects.filter(status="submitted").update(
+                    status="approved", reviewed_at=timezone.now(),
+                    review_comment="Approved automatically (approval was switched off).",
+                )
+                messages.success(request, "Approval is OFF. %d waiting entries were approved." % n)
+            else:
+                messages.success(request, "Approval is %s." % ("ON" if want else "OFF"))
         elif act == "backup":
             from .backup_drive import run_backup
             messages.info(request, "Backup: %s" % run_backup(force=True))
