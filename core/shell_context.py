@@ -73,7 +73,7 @@ def shell(request):
         "nav_shared": shared_menu(current_slug),
         "nav_cur_slug": current_slug,
         "nav_pending": reviewable_activities(user).count(), "nav_alerts": reviewable_activities(user).count() + user.activities.filter(status="returned").count(),
-        "nav_reviewer": user.is_superuser or user.role in ("admin", "dpo", "head"),
+        "nav_reviewer": user.is_superuser or user.role in ("admin", "dpo", "head") or user.reports.exists(),
         "nav_district": user.is_superuser or user.role in DISTRICT_ROLES,
         "nav_subcounties": user.is_superuser or user.role in DISTRICT_ROLES,
         "nav_my_subcounty": my_subcounty,
