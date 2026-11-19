@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sign in | SDLG-Production MIS</title>
+<title>Sign in | SDLG PRODUCTION MIS</title>
 <style>
 :root{--g:#1f5c3a;--g2:#164429;--gold:#d9a521;--ink:#1b2b1b;--soft:#eef3ee}
 *{box-sizing:border-box}
@@ -51,7 +51,7 @@ input:focus{outline:2px solid #8fc7a5;border-color:var(--g)}
       <div class="brand">
         <img src="{% static 'core/letterhead_arms.png' %}" alt="Coat of arms">
         <img src="{% static 'core/letterhead_district.jpeg' %}" alt="Soroti District Local Government">
-        <div><b>SDLG-Production MIS</b><small>Soroti District Local Government</small></div>
+        <div><b>SDLG PRODUCTION MIS</b><small>Soroti District Local Government</small></div>
       </div>
       <h1>One department. Six ways of feeding and growing Teso.</h1>
       <p class="lead">Record, review and report production work across the district, from the garden to the lake, the kraal and the market.</p>
@@ -82,7 +82,7 @@ input:focus{outline:2px solid #8fc7a5;border-color:var(--g)}
   <section class="panel">
     <div class="box">
       <h2>Sign in</h2>
-      <p class="sub">Use your SDLG-Production MIS account</p>
+      <p class="sub">Use your SDLG PRODUCTION MIS account</p>
       {% if lock_message %}<p class="err">{{ lock_message }}</p>{% elif form.errors %}<p class="err">Wrong username or password.</p>{% endif %}
       <form method="post">{% csrf_token %}
         <label>Username</label>
