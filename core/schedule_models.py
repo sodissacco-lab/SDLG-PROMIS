@@ -8,6 +8,9 @@ class ReportSettings(models.Model):
     cc_emails = models.CharField(max_length=300, blank=True, help_text="Optional extra addresses, separated by commas")
     auto_enabled = models.BooleanField(default=True)
     remind_every_days = models.PositiveIntegerField(default=7)
+    require_approval = models.BooleanField(
+        default=True, help_text="When off, submitted entries are approved automatically"
+    )
 
     @classmethod
     def get(cls):
