@@ -21,6 +21,14 @@
   {% if not mail_ready %}<div class="warn">E-mail is not connected yet (BREVO_API_KEY and MAIL_FROM are missing in Render).</div>{% endif %}
   {% if not token_set %}<div class="warn">The daily timer is not set up yet. Add CRON_TOKEN in Render, then set up cron-job.org (steps given by your assistant). Until then you can use the Send now buttons below.</div>{% endif %}
 
+  <div class="box"><h2>Approval of entries</h2>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="approval">
+      <label style="font-weight:400"><input type="checkbox" name="require_approval" {% if cfg.require_approval %}checked{% endif %}> Entries must be approved by a supervisor or section head before they count</label>
+      <p style="font-size:12px;color:#5b6b5b;margin:6px 0 0">If you switch this off, every entry counts in reports as soon as the officer submits it, and entries now waiting are approved at once. Reports are only as reliable as the checking behind them.</p>
+      <button class="b" type="submit">Save approval setting</button>
+    </form>
+  </div>
+
   <div class="box"><h2>Who receives the reports</h2>
     <form method="post">{% csrf_token %}<input type="hidden" name="action" value="save">
       <label>District Production Officer's email</label>
