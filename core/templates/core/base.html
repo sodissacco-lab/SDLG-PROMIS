@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}SDLG-Production MIS{% endblock %}</title>
+<title>{% block title %}SDLG PRODUCTION MIS{% endblock %}</title>
 <style>
 body{font-family:system-ui,sans-serif;margin:0;background:#f4f6f4;color:#1b2b1b}
 header{background:#1f5c3a;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
@@ -23,7 +23,7 @@ input{width:100%;padding:10px;margin:4px 0 12px;border:1px solid #bcc9bc;border-
 </head>
 <body>
 <header>
-  <div><img src="{% static 'images/logo.jpg' %}" alt="Logo"><b>SDLG-Production MIS</b><small>Soroti District Local Government</small></div>
+  <div><img src="{% static 'images/logo.jpg' %}" alt="Logo"><b>SDLG PRODUCTION MIS</b><small>Soroti District Local Government</small></div>
   {% if user.is_authenticated %}
   <form method="post" action="{% url 'logout' %}">{% csrf_token %}
     <button class="linkbtn" type="submit">Log out</button>
