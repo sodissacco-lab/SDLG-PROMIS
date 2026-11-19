@@ -26,6 +26,10 @@ class User(AbstractUser):
     )
     sub_county = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=20, blank=True)
+    supervisor = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="reports",
+        help_text="Who reviews and approves this officer's entries",
+    )
 
 
 class SubCounty(models.Model):
@@ -197,3 +201,4 @@ from . import permit_models  # noqa: E402,F401
 from . import pwa_models  # noqa: E402,F401
 from . import auth_models  # noqa: E402,F401
 from . import schedule_models  # noqa: E402,F401
+from . import alerts  # noqa: E402,F401
